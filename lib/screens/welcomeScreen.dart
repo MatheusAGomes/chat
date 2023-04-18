@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 
+import '../Utils/Routes.dart';
+
 class WelcomeScreen extends StatefulWidget {
   const WelcomeScreen({super.key});
 
@@ -29,7 +31,9 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   ButtonPadrao(btnName: "Já sou cadastrado", click: (){}),
-                  ButtonAlternativo(btnName: "Quero me cadastrar", click: (){})
+                  ButtonAlternativo(btnName: "Quero me cadastrar", click: (){
+                    Navigator.pushNamed(context, Routes.CADASTROTELEFONE);
+                  })
 
                 ],
               ),
