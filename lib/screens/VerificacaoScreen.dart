@@ -1,3 +1,6 @@
+import 'dart:convert';
+
+import 'package:chat/Utils/constants.dart';
 import 'package:chat/Utils/toastService.dart';
 import 'package:chat/screens/telefoneCadastroScreen.dart';
 import 'package:chat/widgets/buttonAlternativo.dart';
@@ -7,21 +10,29 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 
 import '../Utils/Routes.dart';
+import '../models/Auth.dart';
 
 class VerificacaoScreen extends StatefulWidget {
   String verificationId = "";
-   VerificacaoScreen({required this.verificationId});
+  String numero = "";
+
+   VerificacaoScreen({required this.verificationId, required this.numero});
 
   @override
   State<VerificacaoScreen> createState() => _VerificacaoScreenState();
 }
 
 class _VerificacaoScreenState extends State<VerificacaoScreen> {
+
   @override
   Widget build(BuildContext context) {
+    Auth auth = Provider.of<Auth>(context, listen: false);
+
     return Scaffold(
         body: Padding(
           padding: const EdgeInsets.symmetric(vertical: 100),
@@ -73,12 +84,30 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
                         },
                         //runs when every textfield is filled
                         onSubmit: (String verificationCode) async {
-                          FirebaseAuth auth = FirebaseAuth.instance;
+                          FirebaseAuth authFire = FirebaseAuth.instance;
                                       try{
                                       PhoneAuthCredential credential = PhoneAuthProvider.credential(verificationId:widget.verificationId, smsCode: verificationCode);
 
-                                      await auth.signInWithCredential(credential);
+                                    final result =  await authFire.signInWithCredential(credential).then((value) async {
+                                      print(value.user!.uid);
+                                      // String idUser;
+                                      // String? nomeUsuario;
+                                      // String telefoneUsuario;
+                                      auth.tokenFake(value.user!.uid);
+                                      print(auth.token);
+
+                                   final response =   await http.post(
+                                          Uri.parse('${constants.banco}/users.json'),
+                                          body: jsonEncode({
+                                          'idUser': value.user!.uid,
+                                          'nomeUsuario': null,
+                                          'telefoneUsuario': widget.numero,
+                                          })).onError((error, stackTrace) => ToastService.showToastError(error.toString()));
+                                          print(response);
                                       Navigator.pushReplacementNamed(context, Routes.NOME);
+
+                                    });
+
                                     }catch(error)
                                       {
                                             ToastService.showToastError(error.toString());

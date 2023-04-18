@@ -51,7 +51,7 @@ class _telefoneCadastroScreenState extends State<telefoneCadastroScreen> {
                     },
                     codeSent: (String verificationId, int? resendToken) {
                       verify = verificationId;
-                      Navigator.push(context,MaterialPageRoute(builder: (context) => VerificacaoScreen(verificationId: verificationId)), );
+                      Navigator.push(context,MaterialPageRoute(builder: (context) => VerificacaoScreen(verificationId: verificationId,numero: UtilBrasilFields.obterTelefone(_telefoneController.text,mascara:false),)), );
                     },
                     codeAutoRetrievalTimeout: (String verificationId) {},
                   );
