@@ -47,7 +47,6 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
         Usuario(idUser: userId, telefoneUsuario: userData['telefoneUsuario'],nomeUsuario: userData['nomeUsuario']),
       );
       });
-
         print(items);
         return items;
       } else {
@@ -126,6 +125,7 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
 
                                       auth.tokenFake(value.user!.uid);
                                       List<Usuario>? users =await readData();
+                                      
                                       if(idExistsInList(users!,auth.token!))
                                         {
                                           Navigator.pushReplacementNamed(context, Routes.MENU);

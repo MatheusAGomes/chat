@@ -3,6 +3,8 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 
+import '../Utils/Store.dart';
+
 
 class Auth with ChangeNotifier {
   String? _token;
@@ -13,6 +15,7 @@ class Auth with ChangeNotifier {
   void tokenFake(token)
   {
     _token = token;
+    Store.save(_key, token);
 
   }
 
@@ -101,23 +104,22 @@ class Auth with ChangeNotifier {
   //   return _autenticar(username, password);
   // }
 
-  // Future<void> tentarLoginAutomatico() async {
-  //   if (estaAutenticado) {
-  //     return Future.value();
-  //   } else {
-  //     _token = await Store.getString(_key);
-  //     if (_token != null) {
-  //       decodificarToken(token);
-  //       notifyListeners();
-  //     }
-  //
-  //     return Future.value();
-  //   }
-  // }
+  Future<void> tentarLoginAutomatico() async {
+    if (estaAutenticado) {
+      return Future.value();
+    } else {
+      _token = await Store.getString(_key);
+      if (_token != null) {
+        notifyListeners();
+      }
 
-  // void deslogar() {
-  //   _token = null;
-  //   Store.remove(this._key);
-  //   notifyListeners();
-  // }
+      return Future.value();
+    }
+  }
+
+  void deslogar() {
+    _token = null;
+    Store.remove(this._key);
+    notifyListeners();
+  }
 }

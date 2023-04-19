@@ -29,7 +29,7 @@ class ButtonPadrao extends StatelessWidget {
         height: MediaQuery.of(context).size.height * height,
         width: double.infinity,
         decoration: BoxDecoration(
-          color: ColorService.azulClaro,
+          color: ColorService.azulEscuro,
           // ignore: prefer_const_constructors
           borderRadius: BorderRadius.all(Radius.circular(28)),
         ),

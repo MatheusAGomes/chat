@@ -29,6 +29,7 @@ class _telefoneCadastroScreenState extends State<telefoneCadastroScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        backgroundColor: ColorService.azulEscuro,
         title: Text('Cadastro'),
       ),
         body: Padding(
@@ -39,7 +40,7 @@ class _telefoneCadastroScreenState extends State<telefoneCadastroScreen> {
               mainAxisAlignment:MainAxisAlignment.spaceBetween,
               children: [
                 Text("Verifique seu número",style: TextStyle(color: ColorService.azulEscuro,fontSize: 20)),
-                Text("O ${nomeDaEmpresa} te enviara um sms para verificar seu número de telefone. Insira o seu telefone: ",style: TextStyle(fontSize: 15)),
+                Text("Digite seu número de celular para enviarmos um SMS com o código de verificação.",style: TextStyle(fontSize: 15)),
                 TextFieldPadrao(click: (){},inputFormatter: [FilteringTextInputFormatter.digitsOnly,
                   TelefoneInputFormatter()],hintText: 'Digite seu Telefone',controller: _telefoneController),
                 ButtonPadrao(btnName: 'Avancar', click: () async {
@@ -55,7 +56,8 @@ class _telefoneCadastroScreenState extends State<telefoneCadastroScreen> {
                     },
                     codeAutoRetrievalTimeout: (String verificationId) {},
                   );
-                })
+                }),
+                Text('© Copyright - Messagio 2023'),
               ],
             ),
           ),

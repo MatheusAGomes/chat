@@ -1,3 +1,4 @@
+import 'package:chat/screens/AuthScreen.dart';
 import 'package:chat/screens/loading_page.dart';
 import 'package:chat/screens/welcomeScreen.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -30,7 +31,7 @@ class MyApp extends StatelessWidget {
       ],
       child: MaterialApp(
         navigatorKey: Routes.navigatorKey,
-        home:  WelcomeScreen(),
+        home:  AuthScreen(),
         debugShowCheckedModeBanner: false,
         title: "Chat",
 

@@ -18,29 +18,37 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 100,horizontal: 50),
+        padding:  EdgeInsets.only(top: 250,bottom: 20,left: 25,right: 25),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
 
             const Text("Logo"),
 
-            SizedBox(
-              height: 150,
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  ButtonPadrao(btnName: "Já sou cadastrado", click: (){
-                    Navigator.pushNamed(context, Routes.CADASTROTELEFONE);
+            Padding(
+              padding: const EdgeInsets.only(top:200),
+              child: SizedBox(
+                height: 150,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    ButtonPadrao(btnName: "Já sou cadastrado", click: (){
+                      Navigator.pushNamed(context, Routes.CADASTROTELEFONE);
 
-                  }),
-                  ButtonAlternativo(btnName: "Quero me cadastrar", click: (){
-                    Navigator.pushNamed(context, Routes.CADASTROTELEFONE);
-                  })
+                    }),
+                    Column(children: [
 
-                ],
+                    ],),
+                    ButtonAlternativo(btnName: "Quero me cadastrar", click: (){
+                      Navigator.pushNamed(context, Routes.CADASTROTELEFONE);
+                    }),
+
+
+                  ],
+                ),
               ),
             ),
+            Text('© Copyright - Messagio 2023'),
           ],
         ),
       )

@@ -26,13 +26,13 @@ class ButtonAlternativo extends StatelessWidget {
             color: Colors.white,
             // ignore: prefer_const_constructors
             borderRadius: BorderRadius.all(Radius.circular(28)),
-            border: Border.all(color: ColorService.azulClaro, width: 3)),
+            border: Border.all(color: ColorService.azulEscuro, width: 3)),
         child: Center(
           child: Text(
             btnName,
             style: Theme.of(context).textTheme.headline3!.copyWith(
               fontSize: 16,
-              color: ColorService.azulClaro,
+              color: ColorService.azulEscuro,
             ),
           ),
         ),
