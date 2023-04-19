@@ -18,6 +18,7 @@ class Routes {
   static const String NOME = "/cadastroNomeFoto";
   static const String MENU = "/MenuPrincipal";
   static const String Login = "/LoginTeleone";
+  static const String Auth = "/Autorizacao";
 
 
 
@@ -35,6 +36,8 @@ class Routes {
     Routes.NOME: (BuildContext context) => PerfilScreen(),
     Routes.MENU: (BuildContext context) => MenuPrincipalScreen(),
     Routes.Login: (BuildContext context) => LoginTelefoneScreen(),
+    Routes.Auth: (BuildContext context) => LoginTelefoneScreen(),
+
 
 
 

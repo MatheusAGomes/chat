@@ -34,6 +34,37 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
   @override
   Widget build(BuildContext context) {
     Auth auth = Provider.of<Auth>(context, listen: false);
+    Future<List<Usuario>?> readData() async {
+      final response = await http.get(Uri.parse('${constants.banco}/users.json'));
+
+      if (response.statusCode == 200) {
+        // dados foram obtidos com sucesso
+        List<Usuario> items = [];
+
+        Map<String, dynamic> data = json.decode(response.body);
+      data.forEach((userId, userData) {
+      items.add(
+        Usuario(idUser: userId, telefoneUsuario: userData['telefoneUsuario'],nomeUsuario: userData['nomeUsuario']),
+      );
+      });
+
+        print(items);
+        return items;
+      } else {
+        // houve um erro ao obter os dados
+        print('Erro ao obter dados: ${response.statusCode}');
+      }
+      return null;
+    }
+
+    bool idExistsInList(List<Usuario> lista, String id) {
+      for (var usuario in lista) {
+        if (usuario.idUser == id) {
+          return true;
+        }
+      }
+      return false;
+    }
 
     return Scaffold(
         body: Padding(
@@ -92,32 +123,50 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
 
                                     final result =  await authFire.signInWithCredential(credential).then((value) async {
                                       print(value.user!.uid);
+
+                                      auth.tokenFake(value.user!.uid);
+                                      List<Usuario>? users =await readData();
+                                      if(idExistsInList(users!,auth.token!))
+                                        {
+                                          Navigator.pushReplacementNamed(context, Routes.MENU);
+                                        }
+                                      else
+                                        {
+
+                                        final response =   await http.put(
+                                        Uri.parse('${constants.banco}/users/${value.user!.uid}.json'),
+                                        body: jsonEncode({
+                                        'idUser': value.user!.uid,
+                                        'nomeUsuario': null,
+                                        'telefoneUsuario': widget.numero,
+                                        })).then((a) {
+                                        Store.save("objeto",Usuario(idUser: value.user!.uid, telefoneUsuario: widget.numero).toJson());
+                                        Navigator.pushReplacementNamed(context, Routes.NOME);
+                                        }).onError((error, stackTrace) => ToastService.showToastError(error.toString()));
+                                        print(response);
+
+                                        }}
+                                      );}
+    catch(error)
+    {
+    ToastService.showToastError(error.toString());
+    }
+
+
+                                    }
+
+
+
+
                                       // String idUser;
                                       // String? nomeUsuario;
                                       // String telefoneUsuario;
-                                      auth.tokenFake(value.user!.uid);
-                                      print(auth.token);
 
-                                   final response =   await http.put(
-                                          Uri.parse('${constants.banco}/users/${value.user!.uid}.json'),
-                                          body: jsonEncode({
-                                          'idUser': value.user!.uid,
-                                          'nomeUsuario': null,
-                                          'telefoneUsuario': widget.numero,
-                                          })).then((a) {
-                                            Store.save("objeto",Usuario(idUser: value.user!.uid, telefoneUsuario: widget.numero).toJson());
-                                            Navigator.pushReplacementNamed(context, Routes.NOME);
-                                   }).onError((error, stackTrace) => ToastService.showToastError(error.toString()));
-                                          print(response);
 
-                                    });
 
-                                    }catch(error)
-                                      {
-                                            ToastService.showToastError(error.toString());
-                                      }
 
-                        }, // end onSubmit
+
+                         // end onSubmit
                       ),
                     ),
 
