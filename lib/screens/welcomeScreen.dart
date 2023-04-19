@@ -30,7 +30,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  ButtonPadrao(btnName: "Já sou cadastrado", click: (){}),
+                  ButtonPadrao(btnName: "Já sou cadastrado", click: (){
+                  Navigator.pushNamed(context, Routes.Login);
+
+                  }),
                   ButtonAlternativo(btnName: "Quero me cadastrar", click: (){
                     Navigator.pushNamed(context, Routes.CADASTROTELEFONE);
                   })

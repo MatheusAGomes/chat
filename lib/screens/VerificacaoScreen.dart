@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:chat/Utils/constants.dart';
 import 'package:chat/Utils/toastService.dart';
+import 'package:chat/models/Usuario.dart';
 import 'package:chat/screens/telefoneCadastroScreen.dart';
 import 'package:chat/widgets/buttonAlternativo.dart';
 import 'package:chat/widgets/buttonPadrao.dart';
@@ -15,6 +16,7 @@ import 'package:provider/provider.dart';
 
 
 import '../Utils/Routes.dart';
+import '../Utils/Store.dart';
 import '../models/Auth.dart';
 
 class VerificacaoScreen extends StatefulWidget {
@@ -96,15 +98,17 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
                                       auth.tokenFake(value.user!.uid);
                                       print(auth.token);
 
-                                   final response =   await http.post(
-                                          Uri.parse('${constants.banco}/users.json'),
+                                   final response =   await http.put(
+                                          Uri.parse('${constants.banco}/users/${value.user!.uid}.json'),
                                           body: jsonEncode({
                                           'idUser': value.user!.uid,
                                           'nomeUsuario': null,
                                           'telefoneUsuario': widget.numero,
-                                          })).onError((error, stackTrace) => ToastService.showToastError(error.toString()));
+                                          })).then((a) {
+                                            Store.save("objeto",Usuario(idUser: value.user!.uid, telefoneUsuario: widget.numero).toJson());
+                                            Navigator.pushReplacementNamed(context, Routes.NOME);
+                                   }).onError((error, stackTrace) => ToastService.showToastError(error.toString()));
                                           print(response);
-                                      Navigator.pushReplacementNamed(context, Routes.NOME);
 
                                     });
 

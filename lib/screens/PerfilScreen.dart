@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:chat/Utils/constants.dart';
 import 'package:chat/Utils/toastService.dart';
 import 'package:chat/screens/EdicaoFotoScreen.dart';
 import 'package:chat/screens/telefoneCadastroScreen.dart';
@@ -12,10 +14,15 @@ import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 
+import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 
 import '../Utils/ColorsService.dart';
 import '../Utils/Routes.dart';
+import '../Utils/Store.dart';
 import '../Utils/utils.dart';
+import '../models/Auth.dart';
+import '../models/Usuario.dart';
 
 class PerfilScreen extends StatefulWidget {
   PerfilScreen();
@@ -25,10 +32,25 @@ class PerfilScreen extends StatefulWidget {
 }
 
 class _PerfilScreenState extends State<PerfilScreen> {
+  void updateUserData(String uid, Usuario user) async {
+    final url = '${constants.banco}/users/$uid.json';
+    final response = await http.patch(Uri.parse(url), body: json.encode({
+      'idUser': user.idUser,
+      'nomeUsuario': user.nomeUsuario,
+      'telefoneUsuario': user.telefoneUsuario,
+    }));
+    if (response.statusCode == 200) {
+      ToastService.showToastInfo('Usuario cadastrado com sucesso !');
+    } else {
+      ToastService.showToastError('Erro ao cadastrar usuário: ${response.reasonPhrase}');
+    }
+  }
   File? _storedImage;
   final nome =  TextEditingController();
   @override
   Widget build(BuildContext context) {
+    Auth auth = Provider.of<Auth>(context, listen: false);
+
     return Scaffold(
         body: Padding(
           padding: const EdgeInsets.symmetric(vertical: 10,horizontal: 25),
@@ -48,7 +70,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
                   child: Stack(
                       clipBehavior: Clip.none,
                       children: [
-
                              _storedImage != null
                             ? CircleAvatar(
                           radius: 45,
@@ -99,7 +120,14 @@ class _PerfilScreenState extends State<PerfilScreen> {
                 },)),
             ],
                 ),
-                    ButtonPadrao(btnName: 'Iniciar', click: (){})
+                    ButtonPadrao(btnName: 'Iniciar', click: () async {
+                      Usuario user = Usuario.fromJson(
+                          await Store.read("objeto"));
+                      user.nomeUsuario = nome.text;
+                      updateUserData(auth.token!,user);
+                      Navigator.pushReplacementNamed(context, Routes.MENU);
+
+                    })
   ],
                 ),
               ),
