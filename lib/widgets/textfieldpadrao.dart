@@ -74,32 +74,32 @@ class _TextFieldPadraoState extends State<TextFieldPadrao> {
       keyboardType: widget.keyboardtype,
       style: TextStyle(fontSize: widget.fontSize),
       decoration: InputDecoration(
-        filled: widget.enable == false ? true : false,
-        fillColor: Color(0xFFf2f2f2),
+        filled: true ,
+        fillColor: ColorService.cinza,
         counterText: "",
         floatingLabelAlignment: FloatingLabelAlignment.center,
         contentPadding: widget.padding,
         alignLabelWithHint: true,
         errorText: widget.errorText,
         disabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(28),
-            borderSide: BorderSide(width: 2, color: ColorService.azulClaro)),
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide(width: 2, color: Colors.transparent)),
         focusedErrorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(15),
             borderSide: const BorderSide(width: 1, color: Colors.red)),
         errorBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(28),
+            borderRadius: BorderRadius.circular(15),
             borderSide: const BorderSide(width: 1, color: Colors.red)),
         hintText: widget.hintText,
         prefixIcon: widget.prefixIcon,
         suffixIcon: widget.suffixIcon,
-        hintStyle: const TextStyle(color: Colors.grey),
+        hintStyle:  TextStyle(color: ColorService.cinzaInputLetra),
         enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(28),
-            borderSide: BorderSide(width: 2, color: ColorService.azulClaro)),
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide(width: 2, color: Colors.transparent)),
         focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(28),
-            borderSide: BorderSide(width: 2, color: ColorService.azulEscuro)),
+            borderRadius: BorderRadius.circular(15),
+            borderSide: BorderSide(width: 2, color: Colors.transparent)),
       ),
     );
   }

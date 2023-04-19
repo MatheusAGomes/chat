@@ -32,33 +32,41 @@ class _telefoneCadastroScreenState extends State<telefoneCadastroScreen> {
         backgroundColor: ColorService.azulEscuro,
         title: Text('Cadastro'),
       ),
-        body: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 50,vertical: 100),
-          child: Center(
-            child: Column(
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.only(left: 25,right: 25,top: 25,bottom: 0),
+            child: Center(
+              child: Column(
+                children: [
+                  Text("Verifique seu número",style: TextStyle(color: ColorService.azulEscuro,fontSize: 30,fontWeight: FontWeight.bold)),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.05,),
+                  Text("Digite seu número de celular para enviarmos um SMS com o código de verificação.",style: TextStyle(fontSize: 16)),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.05,),
+                  TextFieldPadrao(click: (){},inputFormatter: [FilteringTextInputFormatter.digitsOnly,
+                    TelefoneInputFormatter()],hintText: 'Digite seu Telefone',controller: _telefoneController),
+                 SizedBox(height: MediaQuery.of(context).size.height * 0.05,),
+                  SizedBox(
+                    width:MediaQuery.of(context).size.width * 0.6 ,
+                    child: ButtonPadrao(btnName: 'Avancar', click: () async {
+                      await FirebaseAuth.instance.verifyPhoneNumber(
+                        phoneNumber: '+55 ${UtilBrasilFields.obterTelefone(_telefoneController.text,mascara:false)}',
+                        verificationCompleted: (PhoneAuthCredential credential) {},
+                        verificationFailed: (FirebaseAuthException e) {
+                          ToastService.showToastError(e.message.toString());
+                        },
+                        codeSent: (String verificationId, int? resendToken) {
+                          verify = verificationId;
+                          Navigator.push(context,MaterialPageRoute(builder: (context) => VerificacaoScreen(verificationId: verificationId,numero: UtilBrasilFields.obterTelefone(_telefoneController.text,mascara:false),)), );
+                        },
+                        codeAutoRetrievalTimeout: (String verificationId) {},
+                      );
+                    }),
+                  ),
+                  SizedBox(height: MediaQuery.of(context).size.height * 0.45,),
 
-              mainAxisAlignment:MainAxisAlignment.spaceBetween,
-              children: [
-                Text("Verifique seu número",style: TextStyle(color: ColorService.azulEscuro,fontSize: 20)),
-                Text("Digite seu número de celular para enviarmos um SMS com o código de verificação.",style: TextStyle(fontSize: 15)),
-                TextFieldPadrao(click: (){},inputFormatter: [FilteringTextInputFormatter.digitsOnly,
-                  TelefoneInputFormatter()],hintText: 'Digite seu Telefone',controller: _telefoneController),
-                ButtonPadrao(btnName: 'Avancar', click: () async {
-                  await FirebaseAuth.instance.verifyPhoneNumber(
-                    phoneNumber: '+55 ${UtilBrasilFields.obterTelefone(_telefoneController.text,mascara:false)}',
-                    verificationCompleted: (PhoneAuthCredential credential) {},
-                    verificationFailed: (FirebaseAuthException e) {
-                      ToastService.showToastError(e.message.toString());
-                    },
-                    codeSent: (String verificationId, int? resendToken) {
-                      verify = verificationId;
-                      Navigator.push(context,MaterialPageRoute(builder: (context) => VerificacaoScreen(verificationId: verificationId,numero: UtilBrasilFields.obterTelefone(_telefoneController.text,mascara:false),)), );
-                    },
-                    codeAutoRetrievalTimeout: (String verificationId) {},
-                  );
-                }),
-                Text('© Copyright - Messagio 2023'),
-              ],
+                  Text('© Copyright - Messagio 2023'),
+                ],
+              ),
             ),
           ),
         )
