@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 
+import '../Utils/ImagesConst.dart';
 import '../Utils/Routes.dart';
 
 class WelcomeScreen extends StatefulWidget {
@@ -23,7 +24,10 @@ class _WelcomeScreenState extends State<WelcomeScreen> {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
 
-            const Text("Logo"),
+            Image.asset(
+              ImagesConst.logo,
+              height: 50,
+            ),
 
             Padding(
               padding: const EdgeInsets.only(top:200),
