@@ -45,34 +45,58 @@ class _PerfilScreenState extends State<PerfilScreen> {
       ToastService.showToastError('Erro ao cadastrar usuário: ${response.reasonPhrase}');
     }
   }
-  File? _storedImage;
   final nome =  TextEditingController();
+  File? _storedImage;
   @override
   Widget build(BuildContext context) {
     Auth auth = Provider.of<Auth>(context, listen: false);
 
+
     return Scaffold(
-        body: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10,horizontal: 25),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              SizedBox(
-                height: 500,
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        body: SingleChildScrollView(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 70,horizontal: 25),
+            child: Column(
+              children: [
+                Column(
                   children: [
-                    Text("Insira o seu nome e sua foto para que as pessoas te reconhecam"),
-                InkWell(
-                      onTap: () {
-                        Navigator.push(context, MaterialPageRoute(builder: (context) =>  EdicaoFotoScreen(_storedImage,nome.text),));
-                      },
+
+                    Center(
+                        child: Text("Insira seus dados",
+                            style: TextStyle(
+                                color: ColorService.azulEscuro,
+                                fontSize: 30,
+                                fontWeight: FontWeight.bold))),
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.025,
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 50),
+                      child: Text("Insira o seu nome e sua foto para que as pessoas te reconhecam"),
+                    ),
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.025,
+                    ),
+
+                    _storedImage != null ? InkWell(
+                      onTap: () async {
+                        File? file =
+                        await Navigator.of(context)
+                            .push(MaterialPageRoute(
+                            builder: (context) =>
+                                EdicaoFotoScreen(
+                                    _storedImage ,
+                                    nome
+                                        .text)));
+                        setState(() {
+                          _storedImage = file;
+                        });},
                   child: Stack(
                       clipBehavior: Clip.none,
                       children: [
                              _storedImage != null
                             ? CircleAvatar(
-                          radius: 45,
+                          radius: 90,
                           backgroundImage:
                           FileImage(
                               _storedImage!),
@@ -91,47 +115,90 @@ class _PerfilScreenState extends State<PerfilScreen> {
                                     .white),
                           ),
                         ),
-                        const Positioned(
-                          top: 130,
-                          left: 100,
-                          child: CircleAvatar(
-                            radius: 40,
-                            backgroundColor:
-                            Colors.white,
-                            child: Icon(
-                              Icons.camera_alt,
-                              color: Colors.black,
-                            ),
-                          ),
-                        )
                       ]),
-                ),
+                ) : InkWell(
+                      onTap: () async {
+                        File? file =
+                            await Navigator.of(context)
+                            .push(MaterialPageRoute(
+                            builder: (context) =>
+                                EdicaoFotoScreen(
+                                    _storedImage ,
+                                    nome
+                                        .text)));
+                        setState(() {
+                          _storedImage = file;
 
 
 
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-                Text('Nome: '),
-                SizedBox(width:200,child: TextFieldPadrao(click: (){},hintText: 'Digite seu nome',controller: nome,onchange: (value){
-                  setState(() {
+                        });},
+                      child: Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            _storedImage != null
+                                ? CircleAvatar(
+                              radius: 90,
+                              backgroundImage:
+                              FileImage(
+                                  _storedImage!),
+                            )
+                                : CircleAvatar(
+                              backgroundColor:
+                              ColorService
+                                  .cinza,
+                              radius: 90,
+                              child: Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.camera_alt,color: ColorService.azulEscuro,size: 60),
+                                  Text('Foto')
+                                ],
+                              ),
+                            ),
+                            // const Positioned(
+                            //   top: 130,
+                            //   left: 100,
+                            //   child: CircleAvatar(
+                            //     radius: 40,
+                            //     backgroundColor:
+                            //     Colors.white,
+                            //     child: Icon(
+                            //       Icons.camera_alt,
+                            //       color: Colors.black,
+                            //     ),
+                            //   ),
+                            // )
+                          ]),
+                    ),
 
-                  });
-                },)),
-            ],
-                ),
-                    ButtonPadrao(btnName: 'Iniciar', click: () async {
-                      Usuario user = Usuario.fromJson(
-                          await Store.read("objeto"));
-                      user.nomeUsuario = nome.text;
-                      updateUserData(auth.token!,user);
-                      Navigator.pushReplacementNamed(context, Routes.MENU);
 
-                    })
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.025,
+                    ),
+            SizedBox( width: MediaQuery.of(context).size.width * 0.8,child: TextFieldPadrao(click: (){},hintText: 'Digite seu nome',controller: nome,onchange: (value){
+              setState(() {
+
+              });
+            },)),
+                    SizedBox(
+                      height: MediaQuery.of(context).size.height * 0.025,
+                    ),
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.6,
+
+                      child: ButtonPadrao(btnName: 'Avançar', click: () async {
+                        Usuario user = Usuario.fromJson(
+                            await Store.read("objeto"));
+                        user.nomeUsuario = nome.text;
+                        updateUserData(auth.token!,user);
+                        Navigator.pushReplacementNamed(context, Routes.MENU);
+
+                      }),
+                    )
   ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         )
     );

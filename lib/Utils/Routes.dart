@@ -1,3 +1,4 @@
+import 'package:chat/screens/AuthScreen.dart';
 import 'package:chat/screens/VerificacaoScreen.dart';
 import 'package:chat/screens/menuPrincipalScreen.dart';
 import 'package:chat/screens/telefoneCadastroScreen.dart';
@@ -36,7 +37,7 @@ class Routes {
     Routes.NOME: (BuildContext context) => PerfilScreen(),
     Routes.MENU: (BuildContext context) => MenuPrincipalScreen(),
     Routes.Login: (BuildContext context) => LoginTelefoneScreen(),
-    Routes.Auth: (BuildContext context) => LoginTelefoneScreen(),
+    Routes.Auth: (BuildContext context) => AuthScreen(),
 
 
 

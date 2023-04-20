@@ -58,6 +58,7 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
 
 
                   auth.deslogar();
+                  Navigator.pushReplacementNamed(context, Routes.Auth);
 
 
                 },

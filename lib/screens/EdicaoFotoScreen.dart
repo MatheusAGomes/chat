@@ -34,86 +34,86 @@ class _EdicaoFotoScreenState extends State<EdicaoFotoScreen> {
     nome = widget.nome;
   }
 
-  Future<bool?> _showGeneralDialog() async {
-    await showGeneralDialog(
-      context: context,
-      barrierColor: Colors.black45,
-      transitionDuration: Duration(milliseconds: 200),
-      pageBuilder: (BuildContext context, Animation animation,
-          Animation secondaryAnimation) {
-        return Center(
-          child: Container(
-            width: MediaQuery.of(context).size.width * 0.8,
-            height: MediaQuery.of(context).size.height * 0.6,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: <Widget>[
-                Text(
-                  'Permissão negada',
-                  style: const TextStyle(
-                      color: Colors.black,
-                      fontSize: 25,
-                      decoration: TextDecoration.none),
-                ),
-                const CircleAvatar(
-                  radius: 45,
-                  backgroundColor: Colors.red,
-                  child: Icon(
-                    Icons.close_rounded,
-                    size: 45,
-                    color: Colors.white,
-                  ),
-                ),
-                Text(
-                  'Não foi possiver acessar a camera ou a galeria',
-                  style: const TextStyle(
-                      color: Colors.grey,
-                      fontSize: 10,
-                      decoration: TextDecoration.none),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      Container(
-                        width: 125,
-                        height: 35,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            openAppSettings();
-                            Navigator.pop(context);
-                            return null;
-                          },
-                          child: Text('Ir para configurações'),
-                        ),
-                      ),
-                      Container(
-                        width: 125,
-                        height: 35,
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.pop(context);
-                            return null;
-                          },
-                          child: Text(
-                              'Continue sem foto'),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+  // Future<bool?> _showGeneralDialog() async {
+  //   await showGeneralDialog(
+  //     context: context,
+  //     barrierColor: Colors.black45,
+  //     transitionDuration: Duration(milliseconds: 200),
+  //     pageBuilder: (BuildContext context, Animation animation,
+  //         Animation secondaryAnimation) {
+  //       return Center(
+  //         child: Container(
+  //           width: MediaQuery.of(context).size.width * 0.8,
+  //           height: MediaQuery.of(context).size.height * 0.6,
+  //           decoration: BoxDecoration(
+  //             color: Colors.white,
+  //             borderRadius: BorderRadius.circular(20),
+  //           ),
+  //           child: Column(
+  //             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //             children: <Widget>[
+  //               Text(
+  //                 'Permissão negada',
+  //                 style: const TextStyle(
+  //                     color: Colors.black,
+  //                     fontSize: 25,
+  //                     decoration: TextDecoration.none),
+  //               ),
+  //               const CircleAvatar(
+  //                 radius: 45,
+  //                 backgroundColor: Colors.red,
+  //                 child: Icon(
+  //                   Icons.close_rounded,
+  //                   size: 45,
+  //                   color: Colors.white,
+  //                 ),
+  //               ),
+  //               Text(
+  //                 'Não foi possiver acessar a camera ou a galeria',
+  //                 style: const TextStyle(
+  //                     color: Colors.grey,
+  //                     fontSize: 10,
+  //                     decoration: TextDecoration.none),
+  //               ),
+  //               Padding(
+  //                 padding: const EdgeInsets.symmetric(horizontal: 10),
+  //                 child: Row(
+  //                   mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+  //                   children: [
+  //                     Container(
+  //                       width: 125,
+  //                       height: 35,
+  //                       child: ElevatedButton(
+  //                         onPressed: () {
+  //                           openAppSettings();
+  //                           Navigator.pop(context);
+  //                           return null;
+  //                         },
+  //                         child: Text('Ir para configurações'),
+  //                       ),
+  //                     ),
+  //                     Container(
+  //                       width: 125,
+  //                       height: 35,
+  //                       child: ElevatedButton(
+  //                         onPressed: () {
+  //                           Navigator.pop(context);
+  //                           return null;
+  //                         },
+  //                         child: Text(
+  //                             'Continue sem foto'),
+  //                       ),
+  //                     ),
+  //                   ],
+  //                 ),
+  //               )
+  //             ],
+  //           ),
+  //         ),
+  //       );
+  //     },
+  //   );
+  // }
 
 
   Future<File?> _imagecropper(File image) async {
@@ -143,17 +143,17 @@ class _EdicaoFotoScreenState extends State<EdicaoFotoScreen> {
   }
 
   _takePicture() async {
-    var status = await Permission.camera.status;
-
-    if (status.isDenied) {
-      var result = await Permission.camera.request();
-
-      if (result != PermissionStatus.granted) {
-        if (await _showGeneralDialog() == null) {
-          return null;
-        }
-      }
-    }
+    // var status = await Permission.camera.status;
+    //
+    // if (status.isDenied) {
+    //   var result = await Permission.camera.request();
+    //
+    //   if (result != PermissionStatus.granted) {
+    //     if (await _showGeneralDialog() == null) {
+    //       return null;
+    //     }
+    //   }
+    // }
     final ImagePicker _picker = ImagePicker();
     XFile? imageFile = await _picker.pickImage(
       source: ImageSource.camera,
@@ -170,14 +170,14 @@ class _EdicaoFotoScreenState extends State<EdicaoFotoScreen> {
   }
 
   _getImage() async {
-    var status = await Permission.storage.status;
-
-    if (status.isDenied) {
-      var result = await Permission.storage.request();
-      if (result != PermissionStatus.granted) {
-        return _showGeneralDialog();
-      }
-    }
+    // var status = await Permission.storage.status;
+    //
+    // if (status.isDenied) {
+    //   var result = await Permission.storage.request();
+    //   if (result != PermissionStatus.granted) {
+    //     return _showGeneralDialog();
+    //   }
+    // }
     final ImagePicker _picker = ImagePicker();
     XFile? imageFile = await _picker.pickImage(
       source: ImageSource.gallery,
