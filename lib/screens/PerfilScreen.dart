@@ -35,7 +35,6 @@ class _PerfilScreenState extends State<PerfilScreen> {
   void updateUserData(String uid, Usuario user) async {
     final url = '${constants.banco}/users/$uid.json';
     final response = await http.patch(Uri.parse(url), body: json.encode({
-      'idUser': user.idUser,
       'nomeUsuario': user.nomeUsuario,
       'telefoneUsuario': user.telefoneUsuario,
     }));

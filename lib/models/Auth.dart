@@ -16,6 +16,7 @@ class Auth with ChangeNotifier {
   {
     _token = token;
     Store.save(_key, token);
+    notifyListeners();
 
   }
 

@@ -40,33 +40,37 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
     Future<List<Usuario>?> readData() async {
       final response =
           await http.get(Uri.parse('${constants.banco}/users.json'));
+      List<Usuario> items = [];
+
 
       if (response.statusCode == 200) {
         // dados foram obtidos com sucesso
-        List<Usuario> items = [];
 
-        Map<String, dynamic> data = json.decode(response.body);
-        data.forEach((userId, userData) {
-          items.add(
-            Usuario(
-                idUser: userId,
-                telefoneUsuario: userData['telefoneUsuario'],
-                nomeUsuario: userData['nomeUsuario']),
-          );
-        });
+        Map<String, dynamic>? data = json.decode(response.body);
+        if(data != null){
+          data.forEach((userId, userData) {
+            items.add(
+              Usuario(
+                  telefoneUsuario: userData['telefoneUsuario'],
+                  nomeUsuario: userData['nomeUsuario']),
+            );
+          });
+        }
+
         print(items);
-        return items;
       } else {
         // houve um erro ao obter os dados
         print('Erro ao obter dados: ${response.statusCode}');
       }
-      return null;
+      return items;
     }
 
-    bool idExistsInList(List<Usuario> lista, String id) {
-      for (var usuario in lista) {
-        if (usuario.idUser == id) {
-          return true;
+    bool idExistsInList(List<Usuario> lista, String telefone) {
+      if(lista != []) {
+        for (var usuario in lista) {
+          if (usuario.telefoneUsuario == telefone) {
+            return true;
+          }
         }
       }
       return false;
@@ -87,7 +91,7 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
               SizedBox(
                 height: MediaQuery.of(context).size.height * 0.05,
               ),
-              Padding(
+            const  Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 70),
                 child: Center(
                     child: Text(
@@ -130,6 +134,7 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
                     click: () async {
                       FirebaseAuth authFire = FirebaseAuth.instance;
                       try {
+
                         PhoneAuthCredential credential =
                             PhoneAuthProvider.credential(
                                 verificationId: widget.verificationId,
@@ -138,9 +143,11 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
                         final result = await authFire
                             .signInWithCredential(credential)
                             .then((value) async {
-                          print(value.user!.uid);
+                              //ate aqui ta certo
+                          auth.tokenFake(widget.numero);
 
-                          auth.tokenFake(value.user!.uid);
+
+
                           List<Usuario>? users = await readData();
 
                           if (idExistsInList(users!, auth.token!)) {
@@ -149,9 +156,8 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
                             final response = await http
                                 .put(
                                     Uri.parse(
-                                        '${constants.banco}/users/${value.user!.uid}.json'),
+                                        '${constants.banco}/users/${widget.numero}.json'),
                                     body: jsonEncode({
-                                      'idUser': value.user!.uid,
                                       'nomeUsuario': null,
                                       'telefoneUsuario': widget.numero,
                                     }))
@@ -159,7 +165,6 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
                               Store.save(
                                   "objeto",
                                   Usuario(
-                                          idUser: value.user!.uid,
                                           telefoneUsuario: widget.numero)
                                       .toJson());
                               Navigator.pushReplacementNamed(context, Routes.NOME);
@@ -168,6 +173,9 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
                             print(response);
                           }
                         });
+
+                         print(result);
+                         print(credential.token);
                       } catch (error) {
                         ToastService.showToastError(error.toString());
                       }

@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:brasil_fields/brasil_fields.dart';
 import 'package:chat/Utils/ColorsService.dart';
 import 'package:chat/Utils/toastService.dart';
@@ -12,6 +14,11 @@ import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import '../Utils/Routes.dart';
 import '../main.dart';
+import 'package:http/http.dart' as http;
+import 'package:chat/Utils/constants.dart';
+
+
+import '../models/Usuario.dart';
 
 class telefoneCadastroScreen extends StatefulWidget {
    telefoneCadastroScreen({super.key});
@@ -24,6 +31,43 @@ class _telefoneCadastroScreenState extends State<telefoneCadastroScreen> {
   final _telefoneController = TextEditingController();
   String nomeDaEmpresa = "Messageio";
   String verify = "";
+
+  Future<List<Usuario>?> readData() async {
+    final response =
+    await http.get(Uri.parse('${constants.banco}/users.json'));
+
+    if (response.statusCode == 200) {
+      // dados foram obtidos com sucesso
+      List<Usuario> items = [];
+
+      Map<String, dynamic>? data = json.decode(response.body);
+      if(data != null) {
+        data.forEach((userId, userData) {
+          items.add(
+            Usuario(
+                telefoneUsuario: userData['telefoneUsuario'],
+                nomeUsuario: userData['nomeUsuario']),
+          );
+        });
+      }
+      print(items);
+      return items;
+    } else {
+      // houve um erro ao obter os dados
+      print('Erro ao obter dados: ${response.statusCode}');
+    }
+    return null;
+  }
+  bool idExistsInList(List<Usuario> lista, String telefone) {
+
+
+    for (var usuario in lista) {
+      if (usuario.telefoneUsuario == telefone) {
+        return true;
+      }
+    }
+    return false;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -48,18 +92,26 @@ class _telefoneCadastroScreenState extends State<telefoneCadastroScreen> {
                   SizedBox(
                     width:MediaQuery.of(context).size.width * 0.6 ,
                     child: ButtonPadrao(btnName: 'Avancar', click: () async {
-                      await FirebaseAuth.instance.verifyPhoneNumber(
-                        phoneNumber: '+55 ${UtilBrasilFields.obterTelefone(_telefoneController.text,mascara:false)}',
-                        verificationCompleted: (PhoneAuthCredential credential) {},
-                        verificationFailed: (FirebaseAuthException e) {
-                          ToastService.showToastError(e.message.toString());
-                        },
-                        codeSent: (String verificationId, int? resendToken) {
-                          verify = verificationId;
-                          Navigator.push(context,MaterialPageRoute(builder: (context) => VerificacaoScreen(verificationId: verificationId,numero: UtilBrasilFields.obterTelefone(_telefoneController.text,mascara:false),)), );
-                        },
-                        codeAutoRetrievalTimeout: (String verificationId) {},
-                      );
+                      List<Usuario>? users = await readData();
+                      if(idExistsInList(users!,UtilBrasilFields.obterTelefone(_telefoneController.text,mascara:false)))
+                        {
+                          ToastService.showToastError('Telefone já cadastrado você será direcionado para a tela de verificação de telefone para efetuar o login');
+                        }
+                          await FirebaseAuth.instance.verifyPhoneNumber(
+                            phoneNumber: '+55 ${UtilBrasilFields.obterTelefone(_telefoneController.text,mascara:false)}',
+                            verificationCompleted: (PhoneAuthCredential credential) {},
+                            verificationFailed: (FirebaseAuthException e) {
+                              ToastService.showToastError(e.message.toString());
+                            },
+                            codeSent: (String verificationId, int? resendToken) {
+                              verify = verificationId;
+                              Navigator.push(context,MaterialPageRoute(builder: (context) => VerificacaoScreen(verificationId: verificationId,numero: UtilBrasilFields.obterTelefone(_telefoneController.text,mascara:false),)), );
+                            },
+                            codeAutoRetrievalTimeout: (String verificationId) {},
+                          );
+
+
+
                     }),
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.45,),
