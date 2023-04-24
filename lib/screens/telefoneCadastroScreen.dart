@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
+import 'package:validatorless/validatorless.dart';
 import '../Utils/Routes.dart';
 import '../main.dart';
 import 'package:http/http.dart' as http;
@@ -30,7 +31,9 @@ class telefoneCadastroScreen extends StatefulWidget {
 class _telefoneCadastroScreenState extends State<telefoneCadastroScreen> {
   final _telefoneController = TextEditingController();
   String nomeDaEmpresa = "Messageio";
+  GlobalKey<FormFieldState> _TelefoneKey = GlobalKey<FormFieldState>();
   String verify = "";
+  bool loading = false;
 
   Future<List<Usuario>?> readData() async {
     final response =
@@ -87,32 +90,63 @@ class _telefoneCadastroScreenState extends State<telefoneCadastroScreen> {
                   Text("Digite seu número de celular para enviarmos um SMS com o código de verificação.",style: TextStyle(fontSize: 16)),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.05,),
                   TextFieldPadrao(click: (){},inputFormatter: [FilteringTextInputFormatter.digitsOnly,
-                    TelefoneInputFormatter()],hintText: 'Digite seu Telefone',controller: _telefoneController),
+                    TelefoneInputFormatter()],hintText: 'Digite seu Telefone',controller: _telefoneController,validator: Validatorless.multiple([
+                    Validatorless.min(14,
+                        "Telefone inválido"
+                    ),
+                    Validatorless.max(15,"Telefone inválido")
+                  ]),textFormFildKey: _TelefoneKey),
                  SizedBox(height: MediaQuery.of(context).size.height * 0.05,),
                   SizedBox(
                     width:MediaQuery.of(context).size.width * 0.6 ,
-                    child: ButtonPadrao(btnName: 'Avancar', click: () async {
-                      List<Usuario>? users = await readData();
-                      if(idExistsInList(users!,UtilBrasilFields.obterTelefone(_telefoneController.text,mascara:false)))
+                    child: loading ? Center(child: CircularProgressIndicator(color: ColorService.azulEscuro),) :  ButtonPadrao(btnName: 'Avancar', click: () async {
+                      setState(() {
+                        loading = true;
+                      });
+                      if(_TelefoneKey.currentState!.validate()) {
+
+                            List<Usuario>? users = await readData();
+
+                            await FirebaseAuth.instance.verifyPhoneNumber(
+                              phoneNumber:
+                                  '+55 ${UtilBrasilFields.obterTelefone(_telefoneController.text, mascara: false)}',
+                              verificationCompleted:
+                                  (PhoneAuthCredential credential) {},
+                              verificationFailed: (FirebaseAuthException e) {
+                                ToastService.showToastError(
+                                    e.message.toString());
+                              },
+                              codeSent:
+                                  (String verificationId, int? resendToken) {
+                                    setState(() {
+                                      loading = false;
+                                    });
+                                verify = verificationId;
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (context) => VerificacaoScreen(
+                                            verificationId: verificationId,
+                                            numero:
+                                                UtilBrasilFields.obterTelefone(
+                                                    _telefoneController.text,
+                                                    mascara: false),
+                                          )),
+                                );
+                              },
+                              codeAutoRetrievalTimeout:
+                                  (String verificationId) {},
+                            );
+                          }
+                      else
                         {
-                          ToastService.showToastError('Telefone já cadastrado você será direcionado para a tela de verificação de telefone para efetuar o login');
+                          setState(() {
+                            loading = false;
+                          });
+                          ToastService.showToastError('Telefone inválido');
                         }
-                          await FirebaseAuth.instance.verifyPhoneNumber(
-                            phoneNumber: '+55 ${UtilBrasilFields.obterTelefone(_telefoneController.text,mascara:false)}',
-                            verificationCompleted: (PhoneAuthCredential credential) {},
-                            verificationFailed: (FirebaseAuthException e) {
-                              ToastService.showToastError(e.message.toString());
-                            },
-                            codeSent: (String verificationId, int? resendToken) {
-                              verify = verificationId;
-                              Navigator.push(context,MaterialPageRoute(builder: (context) => VerificacaoScreen(verificationId: verificationId,numero: UtilBrasilFields.obterTelefone(_telefoneController.text,mascara:false),)), );
-                            },
-                            codeAutoRetrievalTimeout: (String verificationId) {},
-                          );
 
-
-
-                    }),
+                        }),
                   ),
                   SizedBox(height: MediaQuery.of(context).size.height * 0.45,),
 

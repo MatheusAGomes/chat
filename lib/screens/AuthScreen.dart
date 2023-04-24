@@ -5,13 +5,12 @@ import 'package:provider/provider.dart';
 
 
 import '../Utils/ColorsService.dart';
-
+import '../Utils/Store.dart';
 import '../models/Auth.dart';
 
 
 class AuthScreen extends StatefulWidget {
-
-  const AuthScreen();
+   AuthScreen();
   @override
   State<AuthScreen> createState() => _AuthScreenState();
 }
@@ -20,27 +19,20 @@ class _AuthScreenState extends State<AuthScreen> {
   @override
   Widget build(BuildContext context) {
 
-    Auth auth = Provider.of(context);
+    Auth auth = Provider.of(context,);
     return FutureBuilder(
       future: auth.tentarLoginAutomatico(),
       builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return  Scaffold(
             body: Center(
-              child: CircularProgressIndicator(color: ColorService.azulClaro,),
+              child: CircularProgressIndicator(color: ColorService.azulEscuro,),
             ),
           );
-        }  else if (snapshot.error != null) {
-          return WelcomeScreen();
-        } else {
-          if (auth.estaAutenticado) {
-            return MenuPrincipalScreen();
-
-          } else {
-            return WelcomeScreen();
-          }
+        }  else {
+          return auth.estaAutenticado ? MenuPrincipalScreen() : WelcomeScreen();
         }
-      },
+        }
     );
   }
 }

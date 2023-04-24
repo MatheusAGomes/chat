@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../Utils/Store.dart';
 
@@ -12,10 +13,11 @@ class Auth with ChangeNotifier {
   Map<String, dynamic>? authDecoded;
 
 
+
   void tokenFake(token)
   {
     _token = token;
-    Store.save(_key, token);
+    Store.saveString(_key,token);
     notifyListeners();
 
   }
@@ -113,12 +115,10 @@ class Auth with ChangeNotifier {
       if (_token != null) {
         notifyListeners();
       }
-
       return Future.value();
     }
   }
-
-  void deslogar() {
+  Future<void> deslogar() async {
     _token = null;
     Store.remove(this._key);
     notifyListeners();

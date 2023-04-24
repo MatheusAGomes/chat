@@ -54,12 +54,10 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
                   style:
                   TextStyle(color: ColorService.azulEscuro),
                 ),
-                onTap: () async {
+                onTap: ()  {
 
 
-                  auth.deslogar();
-                  Navigator.pushReplacementNamed(context, Routes.Auth);
-
+                auth.deslogar();
 
                 },
               ),

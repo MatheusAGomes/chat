@@ -33,6 +33,7 @@ class VerificacaoScreen extends StatefulWidget {
 
 class _VerificacaoScreenState extends State<VerificacaoScreen> {
   TextEditingController _codigo = TextEditingController();
+  bool loading = false;
 
   @override
   Widget build(BuildContext context) {
@@ -129,57 +130,68 @@ class _VerificacaoScreenState extends State<VerificacaoScreen> {
               ),
               SizedBox(
                 width: MediaQuery.of(context).size.width * 0.6,
-                child: ButtonPadrao(
+                child: loading ?  Center(child: CircularProgressIndicator()):ButtonPadrao(
                     btnName: 'Avançar',
                     click: () async {
+                      setState(() {
+                        loading = true;
+                      });
                       FirebaseAuth authFire = FirebaseAuth.instance;
+
                       try {
 
                         PhoneAuthCredential credential =
-                            PhoneAuthProvider.credential(
-                                verificationId: widget.verificationId,
-                                smsCode: _codigo.text);
+                        PhoneAuthProvider.credential(
+                            verificationId: widget.verificationId,
+                            smsCode: _codigo.text);
 
                         final result = await authFire
                             .signInWithCredential(credential)
                             .then((value) async {
-                              //ate aqui ta certo
+                          //ate aqui ta certo
+                          List<Usuario>? users = await readData();
                           auth.tokenFake(widget.numero);
 
-
-
-                          List<Usuario>? users = await readData();
-
-                          if (idExistsInList(users!, auth.token!)) {
-                            Navigator.pushReplacementNamed(context, Routes.MENU);
+                          if (idExistsInList(users ?? [], widget.numero)) {
+                            Navigator.pushReplacementNamed(context, Routes.Auth);
                           } else {
                             final response = await http
                                 .put(
-                                    Uri.parse(
-                                        '${constants.banco}/users/${widget.numero}.json'),
-                                    body: jsonEncode({
-                                      'nomeUsuario': null,
-                                      'telefoneUsuario': widget.numero,
-                                    }))
+                                Uri.parse(
+                                    '${constants.banco}/users/${widget.numero}.json'),
+                                body: jsonEncode({
+                                  'nomeUsuario': null,
+                                  'telefoneUsuario': widget.numero,
+                                }))
                                 .then((a) {
                               Store.save(
                                   "objeto",
                                   Usuario(
-                                          telefoneUsuario: widget.numero)
+                                      telefoneUsuario: widget.numero)
                                       .toJson());
+                              setState(() {
+                                loading = false;
+                              });
                               Navigator.pushReplacementNamed(context, Routes.NOME);
+
+
                             }).onError((error, stackTrace) =>
-                                    ToastService.showToastError(error.toString()));
+                                ToastService.showToastError("Codigo inválido"));
                             print(response);
                           }
                         });
 
-                         print(result);
-                         print(credential.token);
+
                       } catch (error) {
-                        ToastService.showToastError(error.toString());
+                        setState(() {
+                          loading = false;
+                        });
+                        ToastService.showToastError("Codigo inválido");
                       }
-                    }),
+                      setState(() {
+                        loading = false;
+                      });
+                    }) ,
               ),
             ],
           ),

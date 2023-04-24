@@ -190,7 +190,7 @@ class _PerfilScreenState extends State<PerfilScreen> {
                             await Store.read("objeto"));
                         user.nomeUsuario = nome.text;
                         updateUserData(auth.token!,user);
-                        Navigator.pushReplacementNamed(context, Routes.MENU);
+                        Navigator.pushReplacementNamed(context, Routes.Auth);
 
                       }),
                     )
