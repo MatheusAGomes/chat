@@ -114,7 +114,10 @@ class _telefoneCadastroScreenState extends State<telefoneCadastroScreen> {
                                   (PhoneAuthCredential credential) {},
                               verificationFailed: (FirebaseAuthException e) {
                                 ToastService.showToastError(
-                                    e.message.toString());
+                                    "Telefone invalido");
+                                setState(() {
+                                  loading = false;
+                                });
                               },
                               codeSent:
                                   (String verificationId, int? resendToken) {
@@ -145,6 +148,7 @@ class _telefoneCadastroScreenState extends State<telefoneCadastroScreen> {
                           });
                           ToastService.showToastError('Telefone inválido');
                         }
+
 
                         }),
                   ),

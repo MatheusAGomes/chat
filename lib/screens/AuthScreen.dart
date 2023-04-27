@@ -1,3 +1,4 @@
+import 'package:chat/screens/EstruturaScreen.dart';
 import 'package:chat/screens/menuPrincipalScreen.dart';
 import 'package:chat/screens/welcomeScreen.dart';
 import 'package:flutter/material.dart';
@@ -30,7 +31,7 @@ class _AuthScreenState extends State<AuthScreen> {
             ),
           );
         }  else {
-          return auth.estaAutenticado ? MenuPrincipalScreen() : WelcomeScreen();
+          return auth.estaAutenticado ? EstruturasScreen() : WelcomeScreen();
         }
         }
     );

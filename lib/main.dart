@@ -1,3 +1,4 @@
+import 'package:chat/models/MyPageIndex.dart';
 import 'package:chat/screens/AuthScreen.dart';
 import 'package:chat/screens/loading_page.dart';
 import 'package:chat/screens/welcomeScreen.dart';
@@ -27,6 +28,9 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(
           create: (_) => Auth(),
+        ),
+        ChangeNotifierProvider(
+            create: (_) => MyPageIndexProvider(),
         ),
       ],
       child: MaterialApp(
