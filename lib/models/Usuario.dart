@@ -6,10 +6,12 @@ part 'Usuario.g.dart';
 class Usuario {
   String? nomeUsuario;
   String telefoneUsuario;
+  String? imagemUrl;
 
   Usuario({
     this.nomeUsuario,
     required this.telefoneUsuario,
+    this.imagemUrl,
   });
   factory Usuario.fromJson(Map<String, dynamic> json) =>
       _$UsuarioFromJson(json);

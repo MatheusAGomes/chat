@@ -48,7 +48,7 @@ dependencies:
   shared_preferences: ^2.0.15
   build_daemon: ^3.1.1
   validatorless: ^1.2.3 #biblioteca que facilita a implementacao de validadores em formularios.
-
+  contacts_service: ^0.6.3
 
 dev_dependencies:
   flutter_test:

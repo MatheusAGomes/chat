@@ -75,7 +75,6 @@ class _TextFieldPadraoState extends State<TextFieldPadrao> {
       style: TextStyle(fontSize: widget.fontSize),
       decoration: InputDecoration(
         filled: true ,
-        fillColor: ColorService.cinza,
         counterText: "",
         floatingLabelAlignment: FloatingLabelAlignment.center,
         contentPadding: widget.padding,
@@ -83,7 +82,7 @@ class _TextFieldPadraoState extends State<TextFieldPadrao> {
         errorText: widget.errorText,
         disabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(width: 2, color: Colors.transparent)),
+            borderSide: BorderSide(width: 2, color: ColorService.cinza)),
         focusedErrorBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
             borderSide: const BorderSide(width: 1, color: Colors.red)),
@@ -96,10 +95,10 @@ class _TextFieldPadraoState extends State<TextFieldPadrao> {
         hintStyle:  TextStyle(color: ColorService.cinzaInputLetra),
         enabledBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(width: 2, color: Colors.transparent)),
+            borderSide: BorderSide(width: 2, color: ColorService.azulEscuro)),
         focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(15),
-            borderSide: BorderSide(width: 2, color: Colors.transparent)),
+            borderSide: BorderSide(width: 2, color: ColorService.azulEscuro)),
       ),
     );
   }

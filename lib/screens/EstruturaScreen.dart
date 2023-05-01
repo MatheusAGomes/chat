@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../main.dart';
 import '../Utils/ColorsService.dart';
 import '../models/MyPageIndex.dart';
+import 'ContatosScreen.dart';
+import 'MeuPerfilScreen.dart';
 
 
 
@@ -43,6 +45,8 @@ class _EstruturasScreenState extends State<EstruturasScreen> {
         controller: pc,
         onPageChanged: Provider.of<MyPageIndexProvider>(context).updateIndex,
         children: [MenuPrincipalScreen(),
+          ContatosScreen(),
+          MeuPerfilScreen(),
          ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -52,9 +56,9 @@ class _EstruturasScreenState extends State<EstruturasScreen> {
         items: [
           BottomNavigationBarItem(
               icon: const Icon(
-                Icons.home,
+                Icons.chat_bubble,
               ),
-              label: "Inicio"),
+              label: "Conversas"),
           BottomNavigationBarItem(
               icon: const Icon(Icons.group),
               label: 'Contatos'),

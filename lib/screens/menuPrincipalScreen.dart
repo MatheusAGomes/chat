@@ -22,49 +22,22 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
     Auth auth = Provider.of<Auth>(context, listen: false);
 
     return Scaffold(appBar: AppBar(
+      centerTitle: true,
+      backgroundColor: Colors.transparent,
       bottomOpacity: 0.0,
       elevation: 0.0,
       leading: Padding(
-        padding: EdgeInsets.symmetric(
-            vertical: MediaQuery.of(context).size.height * 0.01,
-            horizontal:
-            MediaQuery.of(context).size.height * 0.01),
+        padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).size.height * 0.01),
       ),
-      title: Center(
-        child: Text(
-          'Conversas',
-          style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold),
-        ),
-      ),
-      actions: [
-        PopupMenuButton(
-          color: Colors.white,
-          icon: Icon(
-            Icons.more_vert,
+      title: Text(
+        //auth.authDecoded!['name'],
+        'Conversas',
+        style: TextStyle(
             color: ColorService.azulEscuro,
-          ),
-          itemBuilder: (context) {
-            return [
-              PopupMenuItem<int>(
-                value: 0,
-                child: Text(
-                  'Sair',
-                  style:
-                  TextStyle(color: ColorService.azulEscuro),
-                ),
-                onTap: ()  {
+            fontWeight: FontWeight.bold),
+      ),
 
-
-                auth.deslogar();
-
-                },
-              ),
-            ];
-          },
-        )
-      ],
     ),
         body: Padding(
           padding: const EdgeInsets.symmetric(vertical: 100,horizontal: 50),
