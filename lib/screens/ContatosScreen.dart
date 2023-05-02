@@ -135,40 +135,63 @@ class _ContatosScreenState extends State<ContatosScreen> {
                 if (snapshot.connectionState == ConnectionState.waiting) {
                   return Center(child: CircularProgressIndicator());
                 } else {
-                  return SizedBox(
-                    height: MediaQuery.of(context).size.height * 1,
-                    width: MediaQuery.of(context).size.width * 1,
-                    child: ListView.builder(
+                  if(snapshot.data.length > 0)
+                    {
+                      return RefreshIndicator(
+                        onRefresh: () {
+                          return matchDeUsuarios();
+                        },
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 1,
+                          width: MediaQuery.of(context).size.width * 1,
+                          child: ListView.builder(
 
-                      itemCount: snapshot.data.length,
+                            itemCount: snapshot.data.length,
 
-                      itemBuilder: (context, index) {
-                        final usuario = snapshot.data[index];
+                            itemBuilder: (context, index) {
+                              final usuario = snapshot.data[index];
 
-                        return ListTile(
-                          leading: usuario.imagemUrl != null
-                              ? CircleAvatar(
-                            backgroundImage: NetworkImage(usuario.imagemUrl),
-                          )
-                              : CircleAvatar(
-                            child: Text(
-                              usuario.nomeUsuario
-                                  .split(' ')
-                                  .map((word) => word[0])
-                                  .join(),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            backgroundColor: Colors.blue,
+                              return ListTile(
+                                leading: usuario.imagemUrl != null
+                                    ? CircleAvatar(
+                                  backgroundImage: NetworkImage(usuario.imagemUrl),
+                                )
+                                    : CircleAvatar(
+                                  child: Text(
+                                    usuario.nomeUsuario
+                                        .split(' ')
+                                        .map((word) => word[0])
+                                        .join(),
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  backgroundColor: Colors.blue,
+                                ),
+                                title: Text(snapshot.data[index].nomeUsuario ?? ''),
+                                subtitle: Text(UtilBrasilFields.obterTelefone(snapshot.data[index].telefoneUsuario)),
+                              );
+                            },
                           ),
-                          title: Text(snapshot.data[index].nomeUsuario ?? ''),
-                          subtitle: Text(UtilBrasilFields.obterTelefone(snapshot.data[index].telefoneUsuario)),
-                        );
-                      },
-                    ),
-                  );
+                        ),
+                      );
+                    }
+                  else
+                    {
+                      return  RefreshIndicator(
+                        onRefresh: (){
+                        return  matchDeUsuarios();
+                        },
+                        child: SizedBox(
+                          height: MediaQuery.of(context).size.height * 0.8,
+                          width: MediaQuery.of(context).size.width ,
+                          child:  Center(child: Text('Você não há contatos em sua agenda'),
+                          ),
+                        ),
+                      );
+                    }
+
                 }
               }),
             ]),
