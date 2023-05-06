@@ -3,11 +3,13 @@ import 'dart:io';
 
 import 'package:chat/Utils/constants.dart';
 import 'package:chat/Utils/toastService.dart';
+import 'package:chat/screens/ConversaScreen.dart';
 import 'package:chat/screens/EdicaoFotoScreen.dart';
 import 'package:chat/screens/telefoneCadastroScreen.dart';
 import 'package:chat/widgets/buttonAlternativo.dart';
 import 'package:chat/widgets/buttonPadrao.dart';
 import 'package:chat/widgets/textfieldpadrao.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
@@ -39,7 +41,19 @@ class _ContatosScreenState extends State<ContatosScreen> {
     return telefone.replaceAll(RegExp(r'[()\s-]+'), '');
   }
 
-  Future<dynamic> matchDeUsuarios() async {
+
+
+
+  Future<bool> conversationExists(String conversationId) async {
+    final store = FirebaseFirestore.instance;
+    final conversationRef = store.collection('conversations').doc(conversationId);
+    final conversationSnapshot = await conversationRef.get();
+
+    return conversationSnapshot.exists;
+  }
+
+
+  Future<dynamic> matchDeUsuarios(String telefoneP) async {
     List<Contact> listaDeContatos = await getContacts();
     List<String> telefones =await getAllPhoneNumbers(listaDeContatos);
     print(telefones);
@@ -64,11 +78,13 @@ class _ContatosScreenState extends State<ContatosScreen> {
 
     for(int i = telefones.length - 1; i >= 0 ; i --)
     {
+      if(telefonesDoBanco[i] == telefoneP){
       if(telefonesDoBanco.contains(telefones[i]))
       {
         print(telefonesDoBanco.indexOf(telefones[i]));
         print(users[2]);
         match.add(users[telefonesDoBanco.indexOf(telefones[i])]);
+      }
       }
     }
     match.sort((a, b) => a.nomeUsuario.compareTo(b.nomeUsuario));
@@ -101,6 +117,22 @@ class _ContatosScreenState extends State<ContatosScreen> {
 
 
 
+  Future<void> createConversation(String conversationId, String user1, String user2) async {
+    try {
+      final conversationRef = FirebaseFirestore.instance.collection('conversations').doc(conversationId);
+
+      await conversationRef.set({
+        'user1': user1,
+        'user2': user2,
+
+      });
+    } catch (e) {
+      print('Error creating conversation: $e');
+      rethrow;
+    }
+  }
+
+
   @override
   Widget build(BuildContext context) {
     Auth auth = Provider.of<Auth>(context, listen: false);
@@ -129,7 +161,7 @@ class _ContatosScreenState extends State<ContatosScreen> {
             padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 25),
             child: Column(children: [
               FutureBuilder(
-              future: matchDeUsuarios(),
+              future: matchDeUsuarios(auth.token!),
 
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
@@ -139,7 +171,7 @@ class _ContatosScreenState extends State<ContatosScreen> {
                     {
                       return RefreshIndicator(
                         onRefresh: () {
-                          return matchDeUsuarios();
+                          return matchDeUsuarios(auth.token!);
                         },
                         child: SizedBox(
                           height: MediaQuery.of(context).size.height * 1,
@@ -149,16 +181,46 @@ class _ContatosScreenState extends State<ContatosScreen> {
                             itemCount: snapshot.data.length,
 
                             itemBuilder: (context, index) {
-                              final usuario = snapshot.data[index];
+                              Usuario usuario = snapshot.data[index];
 
                               return ListTile(
+                                onTap:()async{
+                                  
+                                  bool validacao1 = await conversationExists(auth.token!+usuario.telefoneUsuario);
+                                  bool validacao2 = await conversationExists(usuario.telefoneUsuario+auth.token!);
+                                  String? idDaConversa;
+                                  if(!validacao2 && !validacao1)
+                                    {
+                                    await createConversation(auth.token!+usuario.telefoneUsuario,auth.token!,usuario.telefoneUsuario);
+                                    idDaConversa = auth.token!+usuario.telefoneUsuario;
+                                    }
+                                  else
+                                    {
+                                      if(validacao2)
+                                        {
+                                          idDaConversa = usuario.telefoneUsuario+auth.token!;
+                                        }
+                                      else
+                                        {
+                                          idDaConversa = auth.token!+usuario.telefoneUsuario;
+                                        }
+                                    }
+
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            ConversasScreen(
+                                                usuarioDestinatario: usuario,idConversa: idDaConversa!,)),
+                                  );
+                              },
                                 leading: usuario.imagemUrl != null
                                     ? CircleAvatar(
-                                  backgroundImage: NetworkImage(usuario.imagemUrl),
+                                  backgroundImage: NetworkImage(usuario.nomeUsuario!),
                                 )
                                     : CircleAvatar(
                                   child: Text(
-                                    usuario.nomeUsuario
+                                    usuario.nomeUsuario!
                                         .split(' ')
                                         .map((word) => word[0])
                                         .join(),
@@ -181,7 +243,7 @@ class _ContatosScreenState extends State<ContatosScreen> {
                     {
                       return  RefreshIndicator(
                         onRefresh: (){
-                        return  matchDeUsuarios();
+                        return  matchDeUsuarios(auth.token!);
                         },
                         child: SizedBox(
                           height: MediaQuery.of(context).size.height * 0.8,

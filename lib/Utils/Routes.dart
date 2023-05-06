@@ -1,4 +1,5 @@
 import 'package:chat/screens/AuthScreen.dart';
+import 'package:chat/screens/ConversaScreen.dart';
 import 'package:chat/screens/VerificacaoScreen.dart';
 import 'package:chat/screens/menuPrincipalScreen.dart';
 import 'package:chat/screens/telefoneCadastroScreen.dart';
@@ -20,6 +21,7 @@ class Routes {
   static const String MENU = "/MenuPrincipal";
   static const String Login = "/LoginTeleone";
   static const String Auth = "/Autorizacao";
+  static const String CONVERSA = '/Conversa';
 
 
 
@@ -38,6 +40,7 @@ class Routes {
     Routes.MENU: (BuildContext context) => MenuPrincipalScreen(),
     Routes.Login: (BuildContext context) => LoginTelefoneScreen(),
     Routes.Auth: (BuildContext context) => AuthScreen(),
+
 
 
 
