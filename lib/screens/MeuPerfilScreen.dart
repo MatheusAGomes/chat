@@ -26,6 +26,11 @@ import '../models/Auth.dart';
 import '../models/MyPageIndex.dart';
 import '../models/Usuario.dart';
 
+import 'dart:io';
+
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:path/path.dart';
+
 class MeuPerfilScreen extends StatefulWidget {
   MeuPerfilScreen();
 
@@ -45,6 +50,7 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
       Map<String, dynamic>? data = json.decode(response.body);
       if (data != null) {
         Usuario user = Usuario(
+            imagemUrl: data['imagemUrl'],
             telefoneUsuario: data['telefoneUsuario'],
             nomeUsuario: data['nomeUsuario']);
         return user;
@@ -59,6 +65,7 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
     final url = '${constants.banco}/users/$uid.json';
     final response = await http.patch(Uri.parse(url),
         body: json.encode({
+          'imagemUrl':user.imagemUrl,
           'nomeUsuario': user.nomeUsuario,
           'telefoneUsuario': user.telefoneUsuario,
         }));
@@ -74,8 +81,29 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
   File? _storedImage;
   bool editable = false;
   Usuario? user;
+  bool loading = false;
+  Future<String> uploadFile(File file) async {
+    String fileName = basename(file.path);
+
+    // Criar uma referência ao arquivo que será enviado
+    Reference ref = FirebaseStorage.instance.ref().child(fileName);
+
+    // Enviar o arquivo para o Firebase Storage
+    UploadTask uploadTask = ref.putFile(file);
+
+    // Aguardar o fim do upload
+    await uploadTask;
+
+    // Obter a URL do arquivo enviado
+    String fileUrl = await ref.getDownloadURL();
+
+    return fileUrl;
+  }
+  String? linkFoto;
+
   @override
   Widget build(BuildContext context) {
+    String? Media;
     Auth auth = Provider.of<Auth>(context, listen: false);
 
     return FutureBuilder(
@@ -87,6 +115,7 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
         if (user == null) {
           user = snapshot.data;
           nomeController.text = user!.nomeUsuario!;
+          linkFoto = user?.imagemUrl;
         }
 
 
@@ -165,6 +194,7 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
                         user = snapshot.data;
 
                         nomeController.text = user!.nomeUsuario!;
+                        linkFoto = user?.imagemUrl;
                         editable = false;
                       });
 
@@ -191,6 +221,7 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
                       });
 
                       updateUserData(auth.token!, Usuario(
+                          imagemUrl: linkFoto,
                           telefoneUsuario: user!.telefoneUsuario,
                           nomeUsuario: nomeController.text));
 
@@ -213,45 +244,37 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
                     Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _storedImage != null
-                            ? InkWell(
+                       InkWell(
                           onTap: () async {
-                            File? file = await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                    builder: (context) => EdicaoFotoScreen(
-                                        _storedImage, nomeController.text)));
-                            setState(() {
-                              _storedImage = file;
-                            });
-                          },
+                            if(editable == true) {
+                                File? file = await Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                        builder: (context) => EdicaoFotoScreen(
+                                            _storedImage,
+                                            nomeController.text)));
+
+                                setState(() {
+                                  _storedImage = file;
+                                  loading = true;
+                                });
+                                if (file != null) {
+                                  Media = await uploadFile(file);
+
+                                  setState((){
+                                    linkFoto = Media;
+                                  });
+                                }
+                                setState(() {
+                                  loading = false;
+                                });
+                              }
+                            },
                           child: Stack(clipBehavior: Clip.none, children: [
-                            _storedImage != null
-                                ? CircleAvatar(
+                            loading ? CircularProgressIndicator() :
+                                linkFoto != null ? CircleAvatar(
                               radius: 90,
-                              backgroundImage: FileImage(_storedImage!),
-                            )
-                                : CircleAvatar(
-                              backgroundColor: ColorService.azulClaro,
-                              radius: 90,
-                              child: Text(
-                                abreviacao(nomeController.text),
-                                style: const TextStyle(
-                                    color: Colors.white),
-                              ),
-                            ),
-                          ]),
-                        )
-                            : InkWell(
-                          onTap: () async {
-                            File? file = await Navigator.of(context).push(
-                                MaterialPageRoute(
-                                    builder: (context) => EdicaoFotoScreen(
-                                        _storedImage, nomeController.text)));
-                            setState(() {
-                              _storedImage = file;
-                            });
-                          },
-                          child: Stack(clipBehavior: Clip.none, children: [
+                              backgroundImage: NetworkImage(linkFoto!),
+                            ):
                             _storedImage != null
                                 ? CircleAvatar(
                               radius: 90,
@@ -271,19 +294,6 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
                                 ],
                               ),
                             ),
-                            // const Positioned(
-                            //   top: 130,
-                            //   left: 100,
-                            //   child: CircleAvatar(
-                            //     radius: 40,
-                            //     backgroundColor:
-                            //     Colors.white,
-                            //     child: Icon(
-                            //       Icons.camera_alt,
-                            //       color: Colors.black,
-                            //     ),
-                            //   ),
-                            // )
                           ]),
                         ),
                         SizedBox(

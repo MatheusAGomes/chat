@@ -78,14 +78,14 @@ class _ContatosScreenState extends State<ContatosScreen> {
 
     for(int i = telefones.length - 1; i >= 0 ; i --)
     {
-      if(telefonesDoBanco[i] == telefoneP){
+
       if(telefonesDoBanco.contains(telefones[i]))
       {
         print(telefonesDoBanco.indexOf(telefones[i]));
         print(users[2]);
         match.add(users[telefonesDoBanco.indexOf(telefones[i])]);
       }
-      }
+
     }
     match.sort((a, b) => a.nomeUsuario.compareTo(b.nomeUsuario));
    return match;
