@@ -81,9 +81,11 @@ class _ContatosScreenState extends State<ContatosScreen> {
 
       if(telefonesDoBanco.contains(telefones[i]))
       {
-        print(telefonesDoBanco.indexOf(telefones[i]));
-        print(users[2]);
-        match.add(users[telefonesDoBanco.indexOf(telefones[i])]);
+        //print(telefonesDoBanco.indexOf(telefones[i]));
+      //  print(users[2]);
+        if(telefones[i] != telefoneP) {
+          match.add(users[telefonesDoBanco.indexOf(telefones[i])]);
+        }
       }
 
     }
