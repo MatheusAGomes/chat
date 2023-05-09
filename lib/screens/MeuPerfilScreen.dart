@@ -15,6 +15,7 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:validatorless/validatorless.dart';
 
@@ -41,6 +42,7 @@ class MeuPerfilScreen extends StatefulWidget {
 class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
 
   GlobalKey<FormFieldState> nomeKey = GlobalKey<FormFieldState>();
+  String? fotoPerfil;
 
   Future<Usuario?>? readData(token) async {
     final response =
@@ -53,6 +55,12 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
             imagemUrl: data['imagemUrl'],
             telefoneUsuario: data['telefoneUsuario'],
             nomeUsuario: data['nomeUsuario']);
+
+        fotoPerfil = user.imagemUrl;
+        if(fotoPerfil != null)
+        {
+          _storedImage = null;
+        }
         return user;
       }
     } else {
@@ -114,7 +122,7 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
       {
         if (user == null) {
           user = snapshot.data;
-          nomeController.text = user!.nomeUsuario!;
+          nomeController.text = user!.nomeUsuario ?? "";
           linkFoto = user?.imagemUrl;
         }
 
@@ -247,21 +255,48 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
                        InkWell(
                           onTap: () async {
                             if(editable == true) {
+
+
+                              File? foto;
+                              if(fotoPerfil != null)
+                              {
+                                final http.Response response = await http.get(Uri.parse(fotoPerfil!));
+
+                                // Get temporary directory
+                                var dir = await getTemporaryDirectory();
+
+                                // Create an image name
+                                var filename = '${dir.path}/${DateTime.now().millisecondsSinceEpoch}.png';
+
+                                // Save to filesystem
+                                foto = File(filename);
+                                await foto.writeAsBytes(response.bodyBytes);
+
+                              }
                                 File? file = await Navigator.of(context).push(
                                     MaterialPageRoute(
                                         builder: (context) => EdicaoFotoScreen(
-                                            _storedImage,
+                                            foto ?? _storedImage,
                                             nomeController.text)));
 
-                                setState(() {
-                                  _storedImage = file;
-                                  loading = true;
-                                });
-                                if (file != null) {
-                                  Media = await uploadFile(file);
+                              if(file != null) {
+                                  setState(() {
+                                    _storedImage = file;
+                                    loading = true;
+                                  });
+                                  if (file != null) {
+                                    Media = await uploadFile(file);
 
-                                  setState((){
-                                    linkFoto = Media;
+                                    setState(() {
+                                      linkFoto = Media;
+                                    });
+                                  }
+                                }
+                              else
+                                {
+                                  setState(() {
+                                    _storedImage = null;
+                                    linkFoto = null;
                                   });
                                 }
                                 setState(() {
