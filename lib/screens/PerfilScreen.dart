@@ -138,27 +138,39 @@ class _PerfilScreenState extends State<PerfilScreen> {
                         loading ? CircularProgressIndicator() :
                         linkFoto != null ? CircleAvatar(
                           radius: 90,
-                          backgroundImage: NetworkImage(linkFoto!),
+                          backgroundColor: ColorService.azulEscuro,
+                          child: CircleAvatar(
+                            radius: 88,
+                            backgroundImage: NetworkImage(linkFoto!),
+                          ),
                         ):
                         _storedImage != null
                             ? CircleAvatar(
                           radius: 90,
+                          backgroundColor: ColorService.azulEscuro,
+                              child: CircleAvatar(
+                          radius: 88,
                           backgroundImage: FileImage(_storedImage!),
-                        )
+                        ),
+                            )
                             : CircleAvatar(
-                          backgroundColor: ColorService.cinza,
                           radius: 90,
+                          backgroundColor: ColorService.azulEscuro,
+                              child: CircleAvatar(
+                          backgroundColor: ColorService.cinza,
+                          radius: 88,
                           child: Column(
-                            mainAxisAlignment:
-                            MainAxisAlignment.center,
-                            children: [
-                              Icon(Icons.camera_alt,
-                                  color: ColorService.azulEscuro,
-                                  size: 60),
-                              Text('Foto')
-                            ],
+                              mainAxisAlignment:
+                              MainAxisAlignment.center,
+                              children: [
+                                Icon(Icons.camera_alt,
+                                    color: ColorService.azulEscuro,
+                                    size: 60),
+                                Text('Foto')
+                              ],
                           ),
                         ),
+                            ),
                       ]),
                     ),
 

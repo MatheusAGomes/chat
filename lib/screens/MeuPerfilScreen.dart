@@ -253,6 +253,8 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                        InkWell(
+                         splashColor: Colors.transparent, // Remove o efeito de ondulação
+                         highlightColor: Colors.transparent, // Remove a cor de destaque
                           onTap: () async {
                             if(editable == true) {
 
@@ -306,15 +308,27 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
                             },
                           child: Stack(clipBehavior: Clip.none, children: [
                             loading ? CircularProgressIndicator() :
-                                linkFoto != null ? CircleAvatar(
-                              radius: 90,
+                                linkFoto != null && editable?  CircleAvatar(
+                                  radius: 90,
+                                  backgroundColor: ColorService.azulEscuro,
+                                  child: CircleAvatar(
+                              radius: 88,
                               backgroundImage: NetworkImage(linkFoto!),
-                            ):
+                            ),
+                                ):
+                                linkFoto != null && !editable? CircleAvatar(
+                                  radius: 90,
+                                  backgroundImage: NetworkImage(linkFoto!),
+                                ) :
                             _storedImage != null
                                 ? CircleAvatar(
                               radius: 90,
+                              backgroundColor: ColorService.azulEscuro,
+                                  child: CircleAvatar(
+                              radius: 88,
                               backgroundImage: FileImage(_storedImage!),
-                            )
+                            ),
+                                )
                                 : editable ? CircleAvatar(
                               radius: 90,
                               backgroundColor: ColorService.azulEscuro,
