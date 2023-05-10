@@ -315,17 +315,33 @@ class _MeuPerfilScreenState extends State<MeuPerfilScreen> {
                               radius: 90,
                               backgroundImage: FileImage(_storedImage!),
                             )
-                                : CircleAvatar(
+                                : editable ? CircleAvatar(
+                              radius: 90,
+                              backgroundColor: ColorService.azulEscuro,
+                                  child: CircleAvatar(
+                              backgroundColor: ColorService.cinza,
+                              radius: 88,
+                              child: Column(
+                                  mainAxisAlignment:
+                                  MainAxisAlignment.center,
+                                  children: [
+                                    Icon(Icons.camera_alt,
+                                        color: ColorService.azulEscuro,
+                                        size: 60),
+                                    Text('Foto')
+                                  ],
+                              ),
+                            ),
+                                ) : CircleAvatar(
                               backgroundColor: ColorService.cinza,
                               radius: 90,
                               child: Column(
                                 mainAxisAlignment:
                                 MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.camera_alt,
+                                  Icon(Icons.person,
                                       color: ColorService.azulEscuro,
                                       size: 60),
-                                  Text('Foto')
                                 ],
                               ),
                             ),
