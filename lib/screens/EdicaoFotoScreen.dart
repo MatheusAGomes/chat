@@ -143,17 +143,7 @@ class _EdicaoFotoScreenState extends State<EdicaoFotoScreen> {
   }
 
   _takePicture() async {
-    // var status = await Permission.camera.status;
-    //
-    // if (status.isDenied) {
-    //   var result = await Permission.camera.request();
-    //
-    //   if (result != PermissionStatus.granted) {
-    //     if (await _showGeneralDialog() == null) {
-    //       return null;
-    //     }
-    //   }
-    // }
+
     final ImagePicker _picker = ImagePicker();
     XFile? imageFile = await _picker.pickImage(
       source: ImageSource.camera,

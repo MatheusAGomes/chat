@@ -6,6 +6,8 @@ import 'dart:math';
 import 'package:chat/Utils/constants.dart';
 import 'package:chat/Utils/toastService.dart';
 import 'package:chat/screens/EdicaoFotoScreen.dart';
+import 'package:chat/screens/VerificacaoImagemScreen.dart';
+import 'package:chat/screens/VerificacaoScreen.dart';
 import 'package:chat/screens/telefoneCadastroScreen.dart';
 import 'package:chat/widgets/buttonAlternativo.dart';
 import 'package:chat/widgets/buttonPadrao.dart';
@@ -19,6 +21,7 @@ import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
@@ -41,9 +44,43 @@ class ConversasScreen extends StatefulWidget {
 }
 
 class _ConversasScreenState extends State<ConversasScreen> {
+  File? _storedImage;
+
 
   final _controller = StreamController<dynamic>();
   final _messageController = TextEditingController();
+
+  _takePicture() async {
+
+    final ImagePicker _picker = ImagePicker();
+    XFile? imageFile = await _picker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: MediaQuery.of(context).size.width,
+      maxHeight: MediaQuery.of(context).size.height,
+    );
+
+
+    if (imageFile != null) {
+      setState(() {
+        _storedImage = File(imageFile.path);
+      });
+    }
+  }
+
+  _getImage() async {
+
+    final ImagePicker _picker = ImagePicker();
+    XFile? imageFile = await _picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: MediaQuery.of(context).size.width,
+      maxHeight: MediaQuery.of(context).size.height,
+    );
+    if (imageFile != null) {
+      setState(() {
+        _storedImage = File(imageFile.path);
+      });
+    }
+  }
 
 
 
@@ -100,7 +137,17 @@ class _ConversasScreenState extends State<ConversasScreen> {
   }
 
 
+  bool isLink(String text) {
+    // Expressão regular para verificar se o texto é um link
+    final RegExp regex = RegExp(
+      r"^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$",
+      caseSensitive: false,
+      multiLine: false,
+    );
 
+    // Verifica se o texto corresponde à expressão regular
+    return regex.hasMatch(text);
+  }
 
 
   @override
@@ -164,7 +211,26 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                 ? MainAxisAlignment.end
                                 : MainAxisAlignment.start,
                             children: [
-                              Container(
+                              isLink(data['text']) ?  Container(
+                                padding: const EdgeInsets.symmetric(
+                                    vertical: 10, horizontal: 15),
+                                decoration: BoxDecoration(
+                                  color: isCurrentUser
+                                      ? Theme.of(context).accentColor
+                                      : Colors.grey[300],
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(20),
+                                    topRight: const Radius.circular(20),
+                                    bottomLeft: isCurrentUser
+                                        ? const Radius.circular(20)
+                                        : const Radius.circular(0),
+                                    bottomRight: isCurrentUser
+                                        ? const Radius.circular(20)
+                                        : const Radius.circular(20),
+                                  ),
+                                ),
+                                child:  Image.network(data['text'],width: MediaQuery.of(context).size.width * 0.7,height: MediaQuery.of(context).size.height * 0.3,),
+                              ):Container(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 10, horizontal: 15),
                                 decoration: BoxDecoration(
@@ -182,7 +248,16 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                         : Radius.circular(20),
                                   ),
                                 ),
-                                child: Text(
+                                child:  data['text'].length > 40 ? SizedBox(
+                                  width: MediaQuery.of(context).size.width * 0.55 ,
+                                  child: Text(
+                                    data['text'],
+                                    style: TextStyle(
+                                      color: isCurrentUser ? Colors.white : Colors.black,
+                                      fontSize: 16,
+                                    ),
+                                  ),
+                                ):Text(
                                   data['text'],
                                   style: TextStyle(
                                     color: isCurrentUser ? Colors.white : Colors.black,
@@ -211,6 +286,48 @@ class _ConversasScreenState extends State<ConversasScreen> {
 
               ),
             ),
+            IconButton(onPressed: (){}, icon: Icon(Icons.mic_rounded)),
+            IconButton(onPressed: (){
+              showMenu(
+                context: context,
+                position: RelativeRect.fromLTRB(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height *0.76, 0, 0),
+                items: [
+                  PopupMenuItem(
+                    onTap: ()async{
+                      await _takePicture();
+                      await Navigator.pushReplacement(
+                          context,MaterialPageRoute(builder: (context) =>VerificacaoImagemScreen(imagePerfil: _storedImage,conversationid: widget.idConversa,)) );
+                    },
+                    value: 1,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Tirar foto'),
+                        Icon(Icons.camera_alt),
+                      ],
+                    ),
+                  ),
+                  PopupMenuItem(
+                    onTap: () async{
+                     await _getImage();
+                    await Navigator.pushReplacement(
+                       context,MaterialPageRoute(builder: (context) =>VerificacaoImagemScreen(imagePerfil: _storedImage,conversationid: widget.idConversa,)) );
+                      
+                    },
+                    value: 2,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Galeria'),
+                        Icon(Icons.image),
+                      ],
+                    ),
+                  ),
+
+                ],
+                elevation: 0.0,
+              );
+            }, icon: Icon(Icons.attach_file)),
             IconButton(
               icon: Icon(Icons.send),
               onPressed: () {
