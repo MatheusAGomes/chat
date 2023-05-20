@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:chat/widgets/buttonAlternativo.dart';
 import 'package:chat/widgets/buttonPadrao.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -9,6 +11,10 @@ import '../Utils/ColorsService.dart';
 import '../Utils/Routes.dart';
 import '../models/Auth.dart';
 import '../models/Usuario.dart';
+import 'package:http/http.dart' as http;
+import 'package:chat/Utils/constants.dart';
+import 'package:intl/intl.dart';
+import 'ConversaScreen.dart';
 
 class MenuPrincipalScreen extends StatefulWidget {
   const MenuPrincipalScreen({super.key});
@@ -27,8 +33,50 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
       return querySnapshot.docs;
     }
 
+    Future<Usuario> getUsuario(idUser)async {
+      final response =
+      await http.get(Uri.parse('${constants.banco}/users/${idUser}.json'));
+      Usuario usuario;
 
-    Future<Map<String, dynamic>?>? getLastMessage(String idConversation) async {
+
+      if (response.statusCode == 200) {
+        // dados foram obtidos com sucesso
+
+        Map<String, dynamic>? data = json.decode(response.body);
+        if(data != null){
+
+          usuario = Usuario(
+                  imagemUrl: data['imagemUrl'],
+                  telefoneUsuario: data['telefoneUsuario'],
+                  nomeUsuario: data['nomeUsuario']);
+          return usuario;
+        }
+
+      } else {
+        // houve um erro ao obter os dados
+        print('Erro ao obter dados: ${response.statusCode}');
+      }
+      return Usuario(telefoneUsuario: 'default');
+
+    }
+
+    String conversao(timestamp){
+      DateTime dateTime = timestamp.toDate();
+      DateTime now = DateTime.now();
+      DateTime messageTime = timestamp.toDate();
+
+      String time;
+      if (now.difference(messageTime).inHours < 24) {
+        // Exibir apenas a hora se a diferença for menor que 24 horas
+        time = DateFormat.Hm().format(messageTime);
+      } else {
+        // Exibir dia e mês completos se a diferença for maior que 24 horas
+        time = DateFormat('dd/MM').format(messageTime);
+      }
+      return time;
+    }
+
+    Future<Map<String, dynamic>?> getLastMessage(String idConversation) async {
       // Obtenha a referência da coleção de mensagens
       CollectionReference messagesRef = FirebaseFirestore.instance
           .collection('conversations')
@@ -102,31 +150,138 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
 
                             if(document['user1'] == auth.token)
                               {
-                                return FutureBuilder(
-                                  future: getLastMessage(document['user1']+document['user2']),
-                                  builder: (context, snapshot) {
+                                return FutureBuilder<List<dynamic>>(
+                                 // future: getLastMessage(document['user1']+document['user2']),
+                                    future: Future.wait([ getLastMessage(document['user1']+document['user2']),getUsuario(document['user2'])]),
+                                  builder: (context,   AsyncSnapshot<dynamic> snapshot,) {
                               if (snapshot.connectionState == ConnectionState.waiting) {
                               return CircularProgressIndicator();
                               } else if (snapshot.hasError) {
                               return Text('Erro: ${snapshot.error}');
-                              } else if (snapshot.hasData) {
-                                      dynamic data =  snapshot.data;
-                                    return SizedBox(
-
-                                      child: ListTile(
-                                      title: Text(document['user2']),
-                              subtitle: Text(data['text']),
-                              ),
-                                    );}
-                              return SizedBox();
+                              } else if (snapshot.hasData)  {
+                                      Usuario usuario = snapshot.data![1];
+                                      dynamic data =  snapshot.data![0];
+                                      if(data != null && usuario !=null) {
+                                        return SizedBox(
+                                          child: InkWell(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        ConversasScreen(
+                                                          usuarioDestinatario:
+                                                              usuario,
+                                                          idConversa: document[
+                                                                  'user1'] +
+                                                              document[
+                                                                  'user2']!,
+                                                        )),
+                                              );
+                                            },
+                                            child: ListTile(
+                                              leading: usuario.imagemUrl != null
+                                                  ? CircleAvatar(
+                                                      backgroundImage:
+                                                          NetworkImage(usuario
+                                                              .imagemUrl!),
+                                                    )
+                                                  : CircleAvatar(
+                                                      child: Text(
+                                                        usuario.nomeUsuario!
+                                                            .split(' ')
+                                                            .map((word) =>
+                                                                word[0])
+                                                            .join(),
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      backgroundColor:
+                                                          Colors.blue,
+                                                    ),
+                                              title: Text(usuario.nomeUsuario
+                                                  .toString()),
+                                              subtitle: Text(data['text']),
+                                              trailing: Text(
+                                                  conversao(data['timestamp'])),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                    return SizedBox();
                                   }
                               );
                               }
                             if(document['user2'] == auth.token)
                             {
-                              return ListTile(
-                                title: Text(document['user1']),
-                                subtitle: Text('a'),
+                              return FutureBuilder<List<dynamic>>(
+                                // future: getLastMessage(document['user1']+document['user2']),
+                                  future: Future.wait([ getLastMessage(document['user1']+document['user2']),getUsuario(document['user1'])]),
+                                  builder: (context,   AsyncSnapshot<dynamic> snapshot,) {
+                                    if (snapshot.connectionState == ConnectionState.waiting) {
+                                      return CircularProgressIndicator();
+                                    } else if (snapshot.hasError) {
+                                      return Text('Erro: ${snapshot.error}');
+                                    } else if (snapshot.hasData)  {
+                                      Usuario usuario = snapshot.data![1];
+                                      dynamic data =  snapshot.data![0];
+                                      if(data != null && usuario !=null) {
+                                        return SizedBox(
+                                          child: InkWell(
+                                            onTap: () {
+                                              Navigator.push(
+                                                context,
+                                                MaterialPageRoute(
+                                                    builder: (context) =>
+                                                        ConversasScreen(
+                                                          usuarioDestinatario:
+                                                              usuario,
+                                                          idConversa: document[
+                                                                  'user1'] +
+                                                              document[
+                                                                  'user2']!,
+                                                        )),
+                                              );
+                                            },
+                                            child: ListTile(
+                                              leading: usuario.imagemUrl != null
+                                                  ? CircleAvatar(
+                                                      backgroundImage:
+                                                          NetworkImage(usuario
+                                                              .imagemUrl!),
+                                                    )
+                                                  : CircleAvatar(
+                                                      child: Text(
+                                                        usuario.nomeUsuario!
+                                                            .split(' ')
+                                                            .map((word) =>
+                                                                word[0])
+                                                            .join(),
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontWeight:
+                                                              FontWeight.bold,
+                                                        ),
+                                                      ),
+                                                      backgroundColor:
+                                                          Colors.blue,
+                                                    ),
+                                              title: Text(usuario.nomeUsuario
+                                                  .toString()),
+                                              subtitle: Text(data['text']),
+                                              trailing: Text(
+                                                  conversao(data['timestamp'])),
+                                            ),
+                                          ),
+                                        );
+                                      }
+                                    }
+                                    return SizedBox();
+                                  }
                               );
                             }
                             return SizedBox();

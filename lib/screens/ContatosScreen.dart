@@ -62,6 +62,7 @@ class _ContatosScreenState extends State<ContatosScreen> {
     if (response.statusCode == 200) {
       Map<String, dynamic> dataMap = jsonDecode(response.body);
       users = dataMap.entries.map((entry) => Usuario(
+          imagemUrl: entry.value['imagemUrl'],
           nomeUsuario: entry.value['nomeUsuario'],
           telefoneUsuario: entry.value['telefoneUsuario']
       )).toList();
@@ -218,7 +219,7 @@ class _ContatosScreenState extends State<ContatosScreen> {
                               },
                                 leading: usuario.imagemUrl != null
                                     ? CircleAvatar(
-                                  backgroundImage: NetworkImage(usuario.nomeUsuario!),
+                                  backgroundImage: NetworkImage(usuario.imagemUrl!),
                                 )
                                     : CircleAvatar(
                                   child: Text(
