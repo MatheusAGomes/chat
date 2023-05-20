@@ -212,11 +212,9 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                 : MainAxisAlignment.start,
                             children: [
                               isLink(data['text']) ?  Container(
-                                padding: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 15),
                                 decoration: BoxDecoration(
                                   color: isCurrentUser
-                                      ? Theme.of(context).accentColor
+                                      ? ColorService.azulEscuro
                                       : Colors.grey[300],
                                   borderRadius: BorderRadius.only(
                                     topLeft: const Radius.circular(20),
@@ -225,17 +223,18 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                         ? const Radius.circular(20)
                                         : const Radius.circular(0),
                                     bottomRight: isCurrentUser
-                                        ? const Radius.circular(20)
+                                        ? const Radius.circular(0)
                                         : const Radius.circular(20),
                                   ),
                                 ),
-                                child:  Image.network(data['text'],width: MediaQuery.of(context).size.width * 0.7,height: MediaQuery.of(context).size.height * 0.3,),
-                              ):Container(
+                                child:  Image.network(data['text'],width: MediaQuery.of(context).size.width * 0.65,height: MediaQuery.of(context).size.height * 0.3,),
+                              ):
+                              Container(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 10, horizontal: 15),
                                 decoration: BoxDecoration(
                                   color: isCurrentUser
-                                      ? Theme.of(context).accentColor
+                                      ? ColorService.azulEscuro
                                       : Colors.grey[300],
                                   borderRadius: BorderRadius.only(
                                     topLeft: Radius.circular(20),
