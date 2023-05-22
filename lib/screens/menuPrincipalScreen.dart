@@ -24,8 +24,12 @@ class MenuPrincipalScreen extends StatefulWidget {
 }
 
 class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
+  bool exite_mensagem = false;
+
+
   @override
   Widget build(BuildContext context) {
+
     Auth auth = Provider.of<Auth>(context, listen: false);
     final FirebaseFirestore firestore = FirebaseFirestore.instance;
     Future<List<DocumentSnapshot>> getCollectionData() async {
@@ -97,13 +101,16 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
         Map<String, dynamic>? lastMessageData = lastMessage.data() as Map<String, dynamic>?;
 
         // Retorna os dados da última mensagem
+
         return lastMessageData ?? {};
-        return lastMessageData;
       } else {
         // Caso não haja nenhuma mensagem na conversa, retorne null ou um valor indicativo de ausência
         return null;
       }
-    }    return Scaffold(appBar: AppBar(
+    }
+
+
+    return Scaffold(appBar: AppBar(
       centerTitle: true,
       backgroundColor: Colors.transparent,
       bottomOpacity: 0.0,
@@ -126,14 +133,12 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
-
                 FutureBuilder<dynamic>(
                   future:
                     getCollectionData(), //Future that returns bool
 
                   builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
-                    int i=0;
-
+ int i = 0;
                     if (snapshot.connectionState == ConnectionState.waiting) {
                       return Center(
                         child: SizedBox(width: MediaQuery.of(context).size.width *0.1,
@@ -143,214 +148,306 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
                       return Text('Erro: ${snapshot.error}');
                     } else if (snapshot.hasData) {
                       List<DocumentSnapshot> documents = snapshot.data!;
-                      int i = 0;
                       // Aqui você pode usar os dados para popular a sua interface gráfica
-                      return SizedBox(
-                        height: MediaQuery.of(context).size.height * 1,
-                        width: MediaQuery.of(context).size.width * 1,
-                        child: ListView.builder(
-                          itemCount: documents.length,
-                          itemBuilder: (BuildContext context, int index) {
-                            DocumentSnapshot document = documents[index];
-                            // Faça algo com cada documento, por exemplo:
-                            if(documents.length != 0) {
-                              if (document['user1'] == auth.token) {
-                                i++;
+                      return Column(
+                        children: [
+                          SizedBox(
+                            height: MediaQuery.of(context).size.height * 1,
+                            width: MediaQuery.of(context).size.width * 1,
+                            child:  ListView.builder(
+                              itemCount: documents.length,
+                              itemBuilder: (BuildContext context, int index) {
+                                DocumentSnapshot document = documents[index];
+                                // Faça algo com cada documento, por exemplo:
 
-                                return FutureBuilder<List<dynamic>>(
-                                    // future: getLastMessage(document['user1']+document['user2']),
-                                    future: Future.wait([
-                                      getLastMessage(document['user1'] +
-                                          document['user2']),
-                                      getUsuario(document['user2'])
-                                    ]),
-                                    builder: (
-                                      context,
-                                      AsyncSnapshot<dynamic> snapshot,
-                                    ) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return SizedBox();
-                                        // return Center(
-                                        //   child: SizedBox(
-                                        //       width: MediaQuery.of(context).size.width *0.1,
-                                        //         child: CircularProgressIndicator()),
-                                        // );
-                                      } else if (snapshot.hasError) {
-                                        return Text('Erro: ${snapshot.error}');
-                                      } else if (snapshot.hasData) {
-                                        Usuario usuario = snapshot.data![1];
-                                        dynamic data = snapshot.data![0];
-                                        if (data != null && usuario != null) {
-                                          return SizedBox(
-                                            child: InkWell(
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          ConversasScreen(
-                                                            usuarioDestinatario:
-                                                                usuario,
-                                                            idConversa: document[
-                                                                    'user1'] +
-                                                                document[
-                                                                    'user2']!,
-                                                          )),
+
+                                  if (documents.length != 0) {
+                                    if (document['user1'] == auth.token) {
+                                      return FutureBuilder<List<dynamic>>(
+                                          // future: getLastMessage(document['user1']+document['user2']),
+                                          future: Future.wait([
+                                            getLastMessage(document['user1'] +
+                                                document['user2']),
+                                            getUsuario(document['user2'])
+                                          ]),
+                                          builder: (
+                                            context,
+                                            AsyncSnapshot<dynamic> snapshot,
+                                          ) {
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              return SizedBox();
+                                              // return Center(
+                                              //   child: SizedBox(
+                                              //       width: MediaQuery.of(context).size.width *0.1,
+                                              //         child: CircularProgressIndicator()),
+                                              // );
+                                            } else if (snapshot.hasError) {
+                                              return Text(
+                                                  'Erro: ${snapshot.error}');
+                                            } else if (snapshot.hasData) {
+                                              Usuario usuario = snapshot.data![1];
+                                              dynamic data = snapshot.data![0];
+                                              if (data != null && usuario != null) {
+                                                return SizedBox(
+                                                  child: InkWell(
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                ConversasScreen(
+                                                                  usuarioDestinatario:
+                                                                      usuario,
+                                                                  idConversa: document[
+                                                                          'user1'] +
+                                                                      document[
+                                                                          'user2']!,
+                                                                )),
+                                                      );
+                                                    },
+                                                    child: ListTile(
+                                                      leading: usuario.imagemUrl !=
+                                                              null
+                                                          ? CircleAvatar(
+                                                              backgroundImage:
+                                                                  NetworkImage(usuario
+                                                                      .imagemUrl!),
+                                                            )
+                                                          : CircleAvatar(
+                                                              child: Text(
+                                                                usuario.nomeUsuario!
+                                                                    .split(' ')
+                                                                    .map((word) =>
+                                                                        word[0])
+                                                                    .join(),
+                                                                style: TextStyle(
+                                                                  color:
+                                                                      Colors.white,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
+                                                              ),
+                                                              backgroundColor:
+                                                                  Colors.blue,
+                                                            ),
+                                                      title: Text(usuario
+                                                          .nomeUsuario
+                                                          .toString()),
+                                                      subtitle: Text(data['text']),
+                                                      trailing: Text(conversao(
+                                                          data['timestamp'])),
+                                                    ),
+                                                  ),
                                                 );
-                                              },
-                                              child: ListTile(
-                                                leading: usuario.imagemUrl !=
-                                                        null
-                                                    ? CircleAvatar(
-                                                        backgroundImage:
-                                                            NetworkImage(usuario
-                                                                .imagemUrl!),
-                                                      )
-                                                    : CircleAvatar(
-                                                        child: Text(
-                                                          usuario.nomeUsuario!
-                                                              .split(' ')
-                                                              .map((word) =>
-                                                                  word[0])
-                                                              .join(),
-                                                          style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                          ),
-                                                        ),
-                                                        backgroundColor:
-                                                            Colors.blue,
-                                                      ),
-                                                title: Text(usuario.nomeUsuario
-                                                    .toString()),
-                                                subtitle: Text(data['text']),
-                                                trailing: Text(conversao(
-                                                    data['timestamp'])),
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                        
-                                      }
-                                      return SizedBox();
-                                    });
-                              }
-                              if (document['user2'] == auth.token) {
-                                i++;
+                                              } else {
+                                                SizedBox(
+                                                    height: MediaQuery.of(context)
+                                                            .size
+                                                            .height *
+                                                        0.8,
+                                                    child: Container(
+                                                      child: Center(
+                                                          child: Column(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          Text(
+                                                              'Nenhuma conversa iniciada')
+                                                        ],
+                                                      )),
+                                                    ));
+                                              }
+                                            } else {
+                                              return exite_mensagem ? SizedBox(
+                                                  height: MediaQuery.of(context).size.height *
+                                                      0.8,
+                                                  child: Container(
+                                                    child: Center(
+                                                        child: Column(
+                                                          mainAxisAlignment:
+                                                          MainAxisAlignment.center,
+                                                          children: [
+                                                            Text('Nenhuma conversa iniciada')
+                                                          ],
+                                                        )),
+                                                  )): SizedBox();
+                                            }
+                                            return exite_mensagem ? SizedBox(
+                                                height: MediaQuery.of(context).size.height *
+                                                    0.8,
+                                                child: Container(
+                                                  child: Center(
+                                                      child: Column(
+                                                        mainAxisAlignment:
+                                                        MainAxisAlignment.center,
+                                                        children: [
+                                                          Text('Nenhuma conversa iniciada')
+                                                        ],
+                                                      )),
+                                                )): SizedBox();
+                                          });
+                                    }
+                                    if (document['user2'] == auth.token) {
+                                      return FutureBuilder<List<dynamic>>(
+                                          // future: getLastMessage(document['user1']+document['user2']),
+                                          future: Future.wait([
+                                            getLastMessage(document['user1'] +
+                                                document['user2']),
+                                            getUsuario(document['user1'])
+                                          ]),
+                                          builder: (
+                                            context,
+                                            AsyncSnapshot<dynamic> snapshot,
+                                          ) {
+                                            if (snapshot.connectionState ==
+                                                ConnectionState.waiting) {
+                                              return SizedBox();
 
-                                return FutureBuilder<List<dynamic>>(
-                                    // future: getLastMessage(document['user1']+document['user2']),
-                                    future: Future.wait([
-                                      getLastMessage(document['user1'] +
-                                          document['user2']),
-                                      getUsuario(document['user1'])
-                                    ]),
-                                    builder: (
-                                      context,
-                                      AsyncSnapshot<dynamic> snapshot,
-                                    ) {
-                                      if (snapshot.connectionState ==
-                                          ConnectionState.waiting) {
-                                        return SizedBox();
-
-                                        // return Center(
-                                        //   child: SizedBox(
-                                        //       width: MediaQuery.of(context).size.width *0.1,
-                                        //
-                                        //       child: CircularProgressIndicator()),
-                                        // );
-                                      } else if (snapshot.hasError) {
-                                        return Text('Erro: ${snapshot.error}');
-                                      } else if (snapshot.hasData) {
-                                        Usuario usuario = snapshot.data![1];
-                                        dynamic data = snapshot.data![0];
-                                        if (data != null && usuario != null) {
-                                          return SizedBox(
-                                            child: InkWell(
-                                              onTap: () {
-                                                Navigator.push(
-                                                  context,
-                                                  MaterialPageRoute(
-                                                      builder: (context) =>
-                                                          ConversasScreen(
-                                                            usuarioDestinatario:
-                                                                usuario,
-                                                            idConversa: document[
-                                                                    'user1'] +
-                                                                document[
-                                                                    'user2']!,
-                                                          )),
+                                              // return Center(
+                                              //   child: SizedBox(
+                                              //       width: MediaQuery.of(context).size.width *0.1,
+                                              //
+                                              //       child: CircularProgressIndicator()),
+                                              // );
+                                            } else if (snapshot.hasError) {
+                                              return Text(
+                                                  'Erro: ${snapshot.error}');
+                                            } else if (snapshot.hasData) {
+                                              Usuario usuario = snapshot.data![1];
+                                              dynamic data = snapshot.data![0];
+                                              if (data != null && usuario != null) {
+                                                return SizedBox(
+                                                  child: InkWell(
+                                                    onTap: () {
+                                                      Navigator.push(
+                                                        context,
+                                                        MaterialPageRoute(
+                                                            builder: (context) =>
+                                                                ConversasScreen(
+                                                                  usuarioDestinatario:
+                                                                      usuario,
+                                                                  idConversa: document[
+                                                                          'user1'] +
+                                                                      document[
+                                                                          'user2']!,
+                                                                )),
+                                                      );
+                                                    },
+                                                    child: ListTile(
+                                                      leading: usuario.imagemUrl !=
+                                                              null
+                                                          ? CircleAvatar(
+                                                              backgroundImage:
+                                                                  NetworkImage(usuario
+                                                                      .imagemUrl!),
+                                                            )
+                                                          : CircleAvatar(
+                                                              child: Text(
+                                                                usuario.nomeUsuario!
+                                                                    .split(' ')
+                                                                    .map((word) =>
+                                                                        word[0])
+                                                                    .join(),
+                                                                style: TextStyle(
+                                                                  color:
+                                                                      Colors.white,
+                                                                  fontWeight:
+                                                                      FontWeight
+                                                                          .bold,
+                                                                ),
+                                                              ),
+                                                              backgroundColor:
+                                                                  Colors.blue,
+                                                            ),
+                                                      title: Text(usuario
+                                                          .nomeUsuario
+                                                          .toString()),
+                                                      subtitle: Text(data['text']),
+                                                      trailing: Text(conversao(
+                                                          data['timestamp'])),
+                                                    ),
+                                                  ),
                                                 );
-                                              },
-                                              child: ListTile(
-                                                leading: usuario.imagemUrl !=
-                                                        null
-                                                    ? CircleAvatar(
-                                                        backgroundImage:
-                                                            NetworkImage(usuario
-                                                                .imagemUrl!),
-                                                      )
-                                                    : CircleAvatar(
-                                                        child: Text(
-                                                          usuario.nomeUsuario!
-                                                              .split(' ')
-                                                              .map((word) =>
-                                                                  word[0])
-                                                              .join(),
-                                                          style: TextStyle(
-                                                            color: Colors.white,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                          ),
-                                                        ),
-                                                        backgroundColor:
-                                                            Colors.blue,
-                                                      ),
-                                                title: Text(usuario.nomeUsuario
-                                                    .toString()),
-                                                subtitle: Text(data['text']),
-                                                trailing: Text(conversao(
-                                                    data['timestamp'])),
-                                              ),
-                                            ),
-                                          );
-                                        }
-                                      }
-                                      return SizedBox();
-                                    });
-                              }
-                            }
-                            else
-                              {
-                                return SizedBox(height: MediaQuery.of(context).size.height *  0.8,child: Container(child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center,children: [Text('Nenhuma conversa iniciada')],)),));
-                              }
+                                              } else {
+                                                SizedBox(
+                                                    height: MediaQuery.of(context)
+                                                            .size
+                                                            .height *
+                                                        0.8,
+                                                    child: Container(
+                                                      child: Center(
+                                                          child: Column(
+                                                        mainAxisAlignment:
+                                                            MainAxisAlignment
+                                                                .center,
+                                                        children: [
+                                                          Text(
+                                                              'Nenhuma conversa iniciada')
+                                                        ],
+                                                      )),
+                                                    ));
+                                              }
+                                            }
 
+                                            return exite_mensagem ? SizedBox(
+                                                height: MediaQuery.of(context).size.height *
+                                                    0.8,
+                                                child: Container(
+                                                  child: Center(
+                                                      child: Column(
+                                                        mainAxisAlignment:
+                                                        MainAxisAlignment.center,
+                                                        children: [
+                                                          Text('Nenhuma conversa iniciada')
+                                                        ],
+                                                      )),
+                                                )): SizedBox();
+                                          });
+                                    }
+                                    i++;
+                                    return index == (documents.length - 1) ? i == (documents.length) ? SizedBox(
+                                        height: MediaQuery.of(context).size.height *
+                                            0.8,
+                                        child: Container(
+                                          child: Center(
+                                              child: Column(
+                                                mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                                children: [
+                                                  Text('Nenhuma conversa iniciada')
+                                                ],
+                                              )),
+                                        )) : SizedBox() :SizedBox() ;
+                                  } else {
+                                    return SizedBox(
+                                        height: MediaQuery.of(context).size.height *
+                                            0.8,
+                                        child: Container(
+                                          child: Center(
+                                              child: Column(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Text('Nenhuma conversa iniciada')
+                                            ],
+                                          )),
+                                        ));
+                                  }
 
-                            if(i == 0)
-                              {
-                                i++;
-                                return SizedBox(height: MediaQuery.of(context).size.height *  0.8,child: Container(child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center,children: [Text('Nenhuma conversa iniciada')],)),));
-
-                              }
-                            else
-                              {
-                                return SizedBox();
-
-                              }
-
-
-
-                          },
-                        ),
+                              },
+                            )
+                    ,
+                          ),
+                        ],
                       );
                     } else {
                       return Text('Nenhum dado encontrado.');
                     }
                   },
                 ),
-
               ],
             ),
           ),
