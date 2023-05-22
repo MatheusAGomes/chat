@@ -133,7 +133,10 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
 
                   builder: (BuildContext context, AsyncSnapshot<dynamic> snapshot) {
                     if (snapshot.connectionState == ConnectionState.waiting) {
-                      return CircularProgressIndicator();
+                      return Center(
+                        child: SizedBox(width: MediaQuery.of(context).size.width *0.1,
+                            child: CircularProgressIndicator()),
+                      );
                     } else if (snapshot.hasError) {
                       return Text('Erro: ${snapshot.error}');
                     } else if (snapshot.hasData) {
@@ -155,7 +158,12 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
                                     future: Future.wait([ getLastMessage(document['user1']+document['user2']),getUsuario(document['user2'])]),
                                   builder: (context,   AsyncSnapshot<dynamic> snapshot,) {
                               if (snapshot.connectionState == ConnectionState.waiting) {
-                              return CircularProgressIndicator();
+                                return SizedBox();
+                              // return Center(
+                              //   child: SizedBox(
+                              //       width: MediaQuery.of(context).size.width *0.1,
+                              //         child: CircularProgressIndicator()),
+                              // );
                               } else if (snapshot.hasError) {
                               return Text('Erro: ${snapshot.error}');
                               } else if (snapshot.hasData)  {
@@ -223,7 +231,14 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
                                   future: Future.wait([ getLastMessage(document['user1']+document['user2']),getUsuario(document['user1'])]),
                                   builder: (context,   AsyncSnapshot<dynamic> snapshot,) {
                                     if (snapshot.connectionState == ConnectionState.waiting) {
-                                      return CircularProgressIndicator();
+                                      return SizedBox();
+
+                                      // return Center(
+                                      //   child: SizedBox(
+                                      //       width: MediaQuery.of(context).size.width *0.1,
+                                      //
+                                      //       child: CircularProgressIndicator()),
+                                      // );
                                     } else if (snapshot.hasError) {
                                       return Text('Erro: ${snapshot.error}');
                                     } else if (snapshot.hasData)  {
