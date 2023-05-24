@@ -15,10 +15,13 @@ import 'package:chat/widgets/textfieldpadrao.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:contacts_service/contacts_service.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
 import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
+import 'package:flutter_sound/flutter_sound.dart';
+import 'package:path/path.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
@@ -44,43 +47,39 @@ class ConversasScreen extends StatefulWidget {
 }
 
 class _ConversasScreenState extends State<ConversasScreen> {
+
+  @override
+  void initState(){
+    super.initState();
+    initRecorder();
+  }
+  @override
+  void dispose(){
+    recorder.closeRecorder();
+    super.dispose();
+  }
+
+  bool isRercorderReady = false;
+  bool recording = false;
+
+
+  Future initRecorder() async{
+    final status = await Permission.microphone.request();
+    if(status != PermissionStatus.granted){
+      throw 'Microphone permission not granted';
+    }
+    await recorder.openRecorder();
+    isRercorderReady = true;
+    await recorder.openRecorder();
+    recorder.setSubscriptionDuration(const Duration(milliseconds: 500));
+  }
+
   File? _storedImage;
+  final recorder = FlutterSoundRecorder();
 
 
   final _controller = StreamController<dynamic>();
-  final _messageController = TextEditingController();
-
-  _takePicture() async {
-
-    final ImagePicker _picker = ImagePicker();
-    XFile? imageFile = await _picker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: MediaQuery.of(context).size.width,
-      maxHeight: MediaQuery.of(context).size.height,
-    );
-
-
-    if (imageFile != null) {
-      setState(() {
-        _storedImage = File(imageFile.path);
-      });
-    }
-  }
-
-  _getImage() async {
-
-    final ImagePicker _picker = ImagePicker();
-    XFile? imageFile = await _picker.pickImage(
-      source: ImageSource.gallery,
-      maxWidth: MediaQuery.of(context).size.width,
-      maxHeight: MediaQuery.of(context).size.height,
-    );
-    if (imageFile != null) {
-      setState(() {
-        _storedImage = File(imageFile.path);
-      });
-    }
-  }
+  final _messageController =  TextEditingController();
 
 
 
@@ -113,6 +112,8 @@ class _ConversasScreenState extends State<ConversasScreen> {
 
     await messagesRef.add(messageData);
   }
+
+
 
 
 
@@ -152,9 +153,79 @@ class _ConversasScreenState extends State<ConversasScreen> {
 
   @override
   Widget build(BuildContext context) {
+    String gerarNumeroAleatorio() {
+      Random random = Random();
+      int numero = random.nextInt(100); // Define o limite superior como 100 (exclusivo)
+
+      return numero.toString();
+    }
+
+    Future<String> uploadFile(File file) async {
+      String fileName = basename(file.path);
+
+      // Criar uma referência ao arquivo que será enviado
+      Reference ref = FirebaseStorage.instance.ref().child(fileName);
+
+      // Enviar o arquivo para o Firebase Storage
+      UploadTask uploadTask = ref.putFile(file);
+
+      // Aguardar o fim do upload
+      await uploadTask;
+
+      // Obter a URL do arquivo enviado
+      String fileUrl = await ref.getDownloadURL();
+
+      return fileUrl;
+    }
     Auth auth = Provider.of<Auth>(context, listen: false);
     Stream<dynamic> conversas = getConversaDataStream(widget.idConversa);
+    _takePicture() async {
 
+      final ImagePicker _picker = ImagePicker();
+      XFile? imageFile = await _picker.pickImage(
+        source: ImageSource.camera,
+        maxWidth: MediaQuery.of(context).size.width,
+        maxHeight: MediaQuery.of(context).size.height,
+      );
+
+
+      if (imageFile != null) {
+        setState(() {
+          _storedImage = File(imageFile.path);
+        });
+      }
+    }
+
+    _getImage() async {
+
+      final ImagePicker _picker = ImagePicker();
+      XFile? imageFile = await _picker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: MediaQuery.of(context).size.width,
+        maxHeight: MediaQuery.of(context).size.height,
+      );
+      if (imageFile != null) {
+        setState(() {
+          _storedImage = File(imageFile.path);
+        });
+      }
+    }
+
+    Future record() async{
+      if(!isRercorderReady) return;
+      await recorder.startRecorder(toFile: gerarNumeroAleatorio());
+    }
+
+    Future stop() async{
+      if(!isRercorderReady) return;
+      final path = await recorder.stopRecorder();
+      final audioFile = File(path!);
+
+      print('recorded audio : ${audioFile}');
+
+     String a = await uploadFile(audioFile);
+     print(a);
+    }
 
     return Scaffold(
         appBar:AppBar(
@@ -273,7 +344,96 @@ class _ConversasScreenState extends State<ConversasScreen> {
                 },
               ),
             ),
-      Row(
+                recording ? Row(
+                  children:  [
+                    Expanded(
+                      child: TextField(
+
+                        controller: _messageController,
+                        decoration: InputDecoration(
+                          labelText: 'Enviar mensagem...',
+                        ),
+
+                      ),
+                    ),
+                    IconButton(onPressed: ()async{
+                      if(recorder.isRecording)
+                      {
+                        setState(() {
+                          recording = false;
+                        });
+                        await stop();
+                      }
+                      else{
+                        setState(() {
+                          recording = true;
+                        });
+                        await record();
+                      }
+
+                    }, icon: Icon(Icons.mic_rounded),color: recording ? Colors.red: Colors.black),
+                    IconButton(onPressed: (){
+                      showMenu(
+                        context: context,
+                        position: RelativeRect.fromLTRB(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height *0.76, 0, 0),
+                        items: [
+                          PopupMenuItem(
+                            onTap: ()async{
+                              await _takePicture();
+                              await Navigator.pushReplacement(
+                                  context,MaterialPageRoute(builder: (context) =>VerificacaoImagemScreen(imagePerfil: _storedImage,conversationid: widget.idConversa,)) );
+                            },
+                            value: 1,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Tirar foto'),
+                                Icon(Icons.camera_alt),
+                              ],
+                            ),
+                          ),
+                          PopupMenuItem(
+                            onTap: () async{
+                              await _getImage();
+                              await Navigator.pushReplacement(
+                                  context,MaterialPageRoute(builder: (context) => VerificacaoImagemScreen(imagePerfil: _storedImage,conversationid: widget.idConversa,)) );
+
+                            },
+                            value: 2,
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text('Galeria'),
+                                Icon(Icons.image),
+                              ],
+                            ),
+                          ),
+
+                        ],
+                        elevation: 0.0,
+                      );
+                    }, icon: Icon(Icons.attach_file)),
+                    IconButton(
+                      icon: Icon(Icons.send),
+                      onPressed: () {
+                        if(_messageController.text.isNotEmpty)
+                        {
+                          Map<String, dynamic> messageData = {
+                            'sender': auth.token,
+                            'text': _messageController.text,
+                            'timestamp': DateTime.now(),
+                          };
+                          addMessageToConversation(widget.idConversa, messageData);
+                          _messageController.text = '';
+                        }
+                        setState(() {
+                          conversas = getConversaDataStream(widget.idConversa);
+                        });
+                      },
+
+                    ),
+                  ],
+                ) : Row(
         children:  [
              Expanded(
               child: TextField(
@@ -285,7 +445,22 @@ class _ConversasScreenState extends State<ConversasScreen> {
 
               ),
             ),
-            IconButton(onPressed: (){}, icon: Icon(Icons.mic_rounded)),
+            IconButton(onPressed: ()async{
+              if(recorder.isRecording)
+                {
+                  setState(() {
+                    recording = false;
+                  });
+                  await stop();
+                }
+              else{
+                setState(() {
+                  recording = true;
+                });
+                await record();
+              }
+
+            }, icon: Icon(Icons.mic_rounded),color: recording ? Colors.red: Colors.black),
             IconButton(onPressed: (){
               showMenu(
                 context: context,
@@ -310,7 +485,7 @@ class _ConversasScreenState extends State<ConversasScreen> {
                     onTap: () async{
                      await _getImage();
                     await Navigator.pushReplacement(
-                       context,MaterialPageRoute(builder: (context) =>VerificacaoImagemScreen(imagePerfil: _storedImage,conversationid: widget.idConversa,)) );
+                       context,MaterialPageRoute(builder: (context) => VerificacaoImagemScreen(imagePerfil: _storedImage,conversationid: widget.idConversa,)) );
                       
                     },
                     value: 2,
