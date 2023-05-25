@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:audioplayers/audioplayers.dart';
 import 'package:chat/Utils/constants.dart';
 import 'package:chat/Utils/toastService.dart';
 import 'package:chat/screens/EdicaoFotoScreen.dart';
@@ -25,6 +26,7 @@ import 'package:path/path.dart';
 
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
@@ -47,7 +49,7 @@ class ConversasScreen extends StatefulWidget {
 }
 
 class _ConversasScreenState extends State<ConversasScreen> {
-
+  bool tocando =false;
   @override
   void initState(){
     super.initState();
@@ -77,10 +79,26 @@ class _ConversasScreenState extends State<ConversasScreen> {
   File? _storedImage;
   final recorder = FlutterSoundRecorder();
 
-
+  bool urlContainsMp3(String url) {
+    return url.toLowerCase().contains('mp4');
+  }
   final _controller = StreamController<dynamic>();
   final _messageController =  TextEditingController();
+  Future<File?> downloadAudio(String url) async {
+    final response = await http.get(Uri.parse(url));
 
+    if (response.statusCode == 200) {
+      final appDocumentsDir = await getApplicationDocumentsDirectory();
+      final filePath = '${appDocumentsDir.path}/audio.mp4';
+      final file = File(filePath);
+      await file.writeAsBytes(response.bodyBytes);
+      print('Áudio baixado e salvo em: $filePath');
+      return file;
+
+    } else {
+      print('Falha ao baixar o áudio. Código de status: ${response.statusCode}');
+    }
+  }
 
 
 
@@ -213,19 +231,43 @@ class _ConversasScreenState extends State<ConversasScreen> {
 
     Future record() async{
       if(!isRercorderReady) return;
-      await recorder.startRecorder(toFile: gerarNumeroAleatorio());
+      String fileName = gerarNumeroAleatorio() + '.mp4';
+
+      await recorder.startRecorder(toFile: fileName,);
     }
 
     Future stop() async{
       if(!isRercorderReady) return;
       final path = await recorder.stopRecorder();
+      Directory appDocDirectory = await getApplicationDocumentsDirectory();
+
       final audioFile = File(path!);
 
       print('recorded audio : ${audioFile}');
 
-     String a = await uploadFile(audioFile);
-     print(a);
+      String a = await uploadFile(audioFile);
+
+      Map<String, dynamic> messageData = {
+        'sender': auth.token,
+        'text': a,
+        'timestamp': DateTime.now(),
+      };
+      addMessageToConversation(widget.idConversa, messageData);
+
     }
+
+    Future<void> downloadFile(String url, String savePath) async {
+      final response = await http.get(Uri.parse(url));
+      final file = File(savePath);
+
+      if (response.statusCode == 200) {
+        await file.writeAsBytes(response.bodyBytes);
+        print('Arquivo baixado e salvo em: $savePath');
+      } else {
+        print('Falha ao baixar o arquivo. Código de status: ${response.statusCode}');
+      }
+    }
+
 
     return Scaffold(
         appBar:AppBar(
@@ -271,10 +313,11 @@ class _ConversasScreenState extends State<ConversasScreen> {
                     return ListView.builder(
                       reverse: true,
                       itemCount: snapshot.data?.docs.length,
-                      itemBuilder: (BuildContext context, int index) {
+                      itemBuilder: (BuildContext context, int index)  {
                         dynamic data =
                         snapshot.data!.docs[index].data();
                         bool isCurrentUser = data['sender'] == auth.token;
+
                         return Container(
                           margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                           child: Row(
@@ -282,25 +325,7 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                 ? MainAxisAlignment.end
                                 : MainAxisAlignment.start,
                             children: [
-                              isLink(data['text']) ?  Container(
-                                decoration: BoxDecoration(
-                                  color: isCurrentUser
-                                      ? ColorService.azulEscuro
-                                      : Colors.grey[300],
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: const Radius.circular(20),
-                                    topRight: const Radius.circular(20),
-                                    bottomLeft: isCurrentUser
-                                        ? const Radius.circular(20)
-                                        : const Radius.circular(0),
-                                    bottomRight: isCurrentUser
-                                        ? const Radius.circular(0)
-                                        : const Radius.circular(20),
-                                  ),
-                                ),
-                                child:  Image.network(data['text'],width: MediaQuery.of(context).size.width * 0.65,height: MediaQuery.of(context).size.height * 0.3,),
-                              ):
-                              Container(
+                              isLink(data['text']) == false ? Container(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 10, horizontal: 15),
                                 decoration: BoxDecoration(
@@ -334,7 +359,61 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                     fontSize: 16,
                                   ),
                                 ),
-                              ),
+                              ) :  urlContainsMp3(data['text']) == false ?  Container(
+                                decoration: BoxDecoration(
+                                  color: isCurrentUser
+                                      ? ColorService.azulEscuro
+                                      : Colors.grey[300],
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(20),
+                                    topRight: const Radius.circular(20),
+                                    bottomLeft: isCurrentUser
+                                        ? const Radius.circular(20)
+                                        : const Radius.circular(0),
+                                    bottomRight: isCurrentUser
+                                        ? const Radius.circular(0)
+                                        : const Radius.circular(20),
+                                  ),
+                                ),
+                                child:  Image.network(data['text'],width: MediaQuery.of(context).size.width * 0.65,height: MediaQuery.of(context).size.height * 0.3,),
+                              ) :
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: isCurrentUser
+                                      ? ColorService.azulEscuro
+                                      : Colors.grey[300],
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(20),
+                                    topRight: const Radius.circular(20),
+                                    bottomLeft: isCurrentUser
+                                        ? const Radius.circular(20)
+                                        : const Radius.circular(0),
+                                    bottomRight: isCurrentUser
+                                        ? const Radius.circular(0)
+                                        : const Radius.circular(20),
+                                  ),
+                                ),
+                                child:  SizedBox(
+                                  width: MediaQuery.of(context).size.width * 0.25,
+                                  child: Row(
+                                    children: [
+                                      IconButton(icon: Icon(Icons.play_arrow,color: tocando ? Colors.green :  Colors.white,),onPressed: () async {
+                                        final player = AudioPlayer();
+                                        File? teste = await  downloadAudio(data['text']);
+                                        setState(() {
+                                          tocando = true;
+                                        });
+
+                                        setState(() {
+                                          tocando = false;
+                                        });//
+                                      }),
+                                      Text('02:00',style: TextStyle(color: Colors.white),)
+                                    ],
+                                  ),
+                                ),
+                              )
+
                             ],
                           ),
                         );
