@@ -49,6 +49,7 @@ class ConversasScreen extends StatefulWidget {
 }
 
 class _ConversasScreenState extends State<ConversasScreen> {
+  bool tocandoAudio =false;
   bool tocando =false;
   final player = AudioPlayer();
 
@@ -417,17 +418,60 @@ future: downloadAudio(data['text']),
                                                 width: MediaQuery.of(context).size.width * 0.25,
                                                 child: Row(
                                                   children: [
-                                                    IconButton(icon: Icon(Icons.play_arrow,color: tocando ? Colors.green :  Colors.white,),onPressed: () async {
-                                                      File? teste = await  snapshot.data!;
-                                                      setState(() {
-                                                        tocando = true;
-                                                      });
-                                                      await player.play(DeviceFileSource(teste!.path));
+                                                  tocando? IconButton(icon: Icon(Icons.pause,color: tocando ? Colors.green :  Colors.white,),onPressed: () async {
+                                                    File? teste = await  snapshot.data!;
 
-                                                      setState(() {
-                                                        tocando = false;
-                                                      });//
-                                                    }),
+                                                    await player.pause();
+                                                    setState(() {
+                                                      tocando = false;
+                                                    });
+
+                                                  }) :  IconButton(icon: Icon(Icons.play_arrow,color: tocando ? Colors.green :  Colors.white,),onPressed: () async {
+
+                                                    if(tocandoAudio == false) {
+                                                                    setState(
+                                                                        () {
+                                                                      tocandoAudio =
+                                                                          true;
+                                                                    });
+                                                                    File?
+                                                                        teste =
+                                                                        await snapshot
+                                                                            .data!;
+                                                                    setState(
+                                                                        () {
+                                                                      tocando =
+                                                                          true;
+                                                                    });
+                                                                    await player
+                                                                        .play(DeviceFileSource(teste!
+                                                                            .path))
+                                                                        .whenComplete(
+                                                                            () {
+                                                                              setState(() {
+                                                                                tocandoAudio = false;
+                                                                              });
+                                                                              setState(
+                                                                                      () {
+                                                                                    tocando =
+                                                                                    false;
+                                                                                  });
+                                                                            });
+                                                                  }
+                                                            else
+                                                              {
+                                                                player.resume().whenComplete(() {
+                                                                  setState(() {
+                                                                    tocandoAudio = false;
+                                                                    setState(
+                                                                            () {
+                                                                          tocando =
+                                                                          false;
+                                                                        });
+                                                                  });
+                                                                });
+                                                              }
+                                                                }),
                                                     Text(formatTime(durartion),style: TextStyle(color: Colors.white),)
                                                   ],
                                                 ),
@@ -474,7 +518,7 @@ future: downloadAudio(data['text']),
                           }
 
                         }, icon: Icon(Icons.mic_rounded),color: recording ? Colors.red: Colors.black),
-                       
+                       //todo pausar e continuar e mostrar o tempo restante
                       ],
                     );
                   }
@@ -514,7 +558,7 @@ future: downloadAudio(data['text']),
                   PopupMenuItem(
                     onTap: ()async{
                       await _takePicture();
-                      await Navigator.pushReplacement(
+                      await Navigator.push(
                           context,MaterialPageRoute(builder: (context) =>VerificacaoImagemScreen(imagePerfil: _storedImage,conversationid: widget.idConversa,)) );
                     },
                     value: 1,
@@ -529,7 +573,7 @@ future: downloadAudio(data['text']),
                   PopupMenuItem(
                     onTap: () async{
                      await _getImage();
-                    await Navigator.pushReplacement(
+                    await Navigator.push(
                        context,MaterialPageRoute(builder: (context) => VerificacaoImagemScreen(imagePerfil: _storedImage,conversationid: widget.idConversa,)) );
                       
                     },

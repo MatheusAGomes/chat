@@ -75,7 +75,8 @@ class _VerificacaoImagemScreenState extends State<VerificacaoImagemScreen> {
             'text': await uploadFile(_storedImage!),
             'timestamp': DateTime.now(),
           };
-          addMessageToConversation(widget.conversationid,messageData);
+       await   addMessageToConversation(widget.conversationid,messageData).whenComplete(() =>  Navigator.pop(context,null));
+         
           },
         backgroundColor: ColorService.azulEscuro,
         child: const Icon(Icons.send),
