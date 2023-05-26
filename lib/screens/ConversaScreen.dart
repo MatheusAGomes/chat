@@ -403,6 +403,7 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                         setState(() {
                                           tocando = true;
                                         });
+                                        await player.play(DeviceFileSource(teste!.path));
 
                                         setState(() {
                                           tocando = false;
