@@ -50,6 +50,8 @@ class ConversasScreen extends StatefulWidget {
 
 class _ConversasScreenState extends State<ConversasScreen> {
   bool tocando =false;
+  final player = AudioPlayer();
+
   @override
   void initState(){
     super.initState();
@@ -58,6 +60,7 @@ class _ConversasScreenState extends State<ConversasScreen> {
   @override
   void dispose(){
     recorder.closeRecorder();
+    player.dispose();
     super.dispose();
   }
 
@@ -84,6 +87,9 @@ class _ConversasScreenState extends State<ConversasScreen> {
   }
   final _controller = StreamController<dynamic>();
   final _messageController =  TextEditingController();
+
+
+
   Future<File?> downloadAudio(String url) async {
     final response = await http.get(Uri.parse(url));
 
@@ -235,7 +241,14 @@ class _ConversasScreenState extends State<ConversasScreen> {
 
       await recorder.startRecorder(toFile: fileName,);
     }
+  String formatTime(Duration duration){
+      String twoDigts(int i) => i.toString().padLeft(2,'0');
+      final hours = twoDigts(duration.inHours);
+      final minutes = twoDigts(duration.inMinutes.remainder(60));
+      final seconds = twoDigts(duration.inSeconds.remainder(60));
 
+      return [if(duration.inHours > 0)hours,minutes,seconds ].join(':');
+  }
     Future stop() async{
       if(!isRercorderReady) return;
       final path = await recorder.stopRecorder();
@@ -377,43 +390,54 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                 ),
                                 child:  Image.network(data['text'],width: MediaQuery.of(context).size.width * 0.65,height: MediaQuery.of(context).size.height * 0.3,),
                               ) :
-                              Container(
-                                decoration: BoxDecoration(
-                                  color: isCurrentUser
-                                      ? ColorService.azulEscuro
-                                      : Colors.grey[300],
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: const Radius.circular(20),
-                                    topRight: const Radius.circular(20),
-                                    bottomLeft: isCurrentUser
-                                        ? const Radius.circular(20)
-                                        : const Radius.circular(0),
-                                    bottomRight: isCurrentUser
-                                        ? const Radius.circular(0)
-                                        : const Radius.circular(20),
-                                  ),
-                                ),
-                                child:  SizedBox(
-                                  width: MediaQuery.of(context).size.width * 0.25,
-                                  child: Row(
-                                    children: [
-                                      IconButton(icon: Icon(Icons.play_arrow,color: tocando ? Colors.green :  Colors.white,),onPressed: () async {
-                                        final player = AudioPlayer();
-                                        File? teste = await  downloadAudio(data['text']);
-                                        setState(() {
-                                          tocando = true;
-                                        });
-                                        await player.play(DeviceFileSource(teste!.path));
+                              FutureBuilder(
+future: downloadAudio(data['text']),
+                                  builder: (context, snapshot) {
 
-                                        setState(() {
-                                          tocando = false;
-                                        });//
-                                      }),
-                                      Text('02:00',style: TextStyle(color: Colors.white),)
-                                    ],
-                                  ),
-                                ),
-                              )
+                                            Duration durartion = Duration.zero;
+
+
+                                            return Container(
+                                              decoration: BoxDecoration(
+                                                color: isCurrentUser
+                                                    ? ColorService.azulEscuro
+                                                    : Colors.grey[300],
+                                                borderRadius: BorderRadius.only(
+                                                  topLeft: const Radius.circular(20),
+                                                  topRight: const Radius.circular(20),
+                                                  bottomLeft: isCurrentUser
+                                                      ? const Radius.circular(20)
+                                                      : const Radius.circular(0),
+                                                  bottomRight: isCurrentUser
+                                                      ? const Radius.circular(0)
+                                                      : const Radius.circular(20),
+                                                ),
+                                              ),
+                                              child:  SizedBox(
+                                                width: MediaQuery.of(context).size.width * 0.25,
+                                                child: Row(
+                                                  children: [
+                                                    IconButton(icon: Icon(Icons.play_arrow,color: tocando ? Colors.green :  Colors.white,),onPressed: () async {
+                                                      File? teste = await  snapshot.data!;
+                                                      setState(() {
+                                                        tocando = true;
+                                                      });
+                                                      await player.play(DeviceFileSource(teste!.path));
+
+                                                      setState(() {
+                                                        tocando = false;
+                                                      });//
+                                                    }),
+                                                    Text(formatTime(durartion),style: TextStyle(color: Colors.white),)
+                                                  ],
+                                                ),
+                                              ),
+                                            );
+
+
+
+                                  },
+                                )
 
                             ],
                           ),
@@ -424,95 +448,36 @@ class _ConversasScreenState extends State<ConversasScreen> {
                 },
               ),
             ),
-                recording ? Row(
-                  children:  [
-                    Expanded(
-                      child: TextField(
-
-                        controller: _messageController,
-                        decoration: InputDecoration(
-                          labelText: 'Enviar mensagem...',
+                recording ? StreamBuilder(
+                  stream: recorder.onProgress,
+                  builder: (context, snapshot) {
+              final duration = snapshot.hasData ? snapshot.data!.duration:Duration.zero;
+                    return Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children:  [
+                        Expanded(
+                          child: Center(child: Text(formatTime(duration))),
                         ),
+                        IconButton(onPressed: ()async{
+                          if(recorder.isRecording)
+                          {
+                            setState(() {
+                              recording = false;
+                            });
+                            await stop();
+                          }
+                          else{
+                            setState(() {
+                              recording = true;
+                            });
+                            await record();
+                          }
 
-                      ),
-                    ),
-                    IconButton(onPressed: ()async{
-                      if(recorder.isRecording)
-                      {
-                        setState(() {
-                          recording = false;
-                        });
-                        await stop();
-                      }
-                      else{
-                        setState(() {
-                          recording = true;
-                        });
-                        await record();
-                      }
-
-                    }, icon: Icon(Icons.mic_rounded),color: recording ? Colors.red: Colors.black),
-                    IconButton(onPressed: (){
-                      showMenu(
-                        context: context,
-                        position: RelativeRect.fromLTRB(MediaQuery.of(context).size.width, MediaQuery.of(context).size.height *0.76, 0, 0),
-                        items: [
-                          PopupMenuItem(
-                            onTap: ()async{
-                              await _takePicture();
-                              await Navigator.pushReplacement(
-                                  context,MaterialPageRoute(builder: (context) =>VerificacaoImagemScreen(imagePerfil: _storedImage,conversationid: widget.idConversa,)) );
-                            },
-                            value: 1,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Tirar foto'),
-                                Icon(Icons.camera_alt),
-                              ],
-                            ),
-                          ),
-                          PopupMenuItem(
-                            onTap: () async{
-                              await _getImage();
-                              await Navigator.pushReplacement(
-                                  context,MaterialPageRoute(builder: (context) => VerificacaoImagemScreen(imagePerfil: _storedImage,conversationid: widget.idConversa,)) );
-
-                            },
-                            value: 2,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text('Galeria'),
-                                Icon(Icons.image),
-                              ],
-                            ),
-                          ),
-
-                        ],
-                        elevation: 0.0,
-                      );
-                    }, icon: Icon(Icons.attach_file)),
-                    IconButton(
-                      icon: Icon(Icons.send),
-                      onPressed: () {
-                        if(_messageController.text.isNotEmpty)
-                        {
-                          Map<String, dynamic> messageData = {
-                            'sender': auth.token,
-                            'text': _messageController.text,
-                            'timestamp': DateTime.now(),
-                          };
-                          addMessageToConversation(widget.idConversa, messageData);
-                          _messageController.text = '';
-                        }
-                        setState(() {
-                          conversas = getConversaDataStream(widget.idConversa);
-                        });
-                      },
-
-                    ),
-                  ],
+                        }, icon: Icon(Icons.mic_rounded),color: recording ? Colors.red: Colors.black),
+                       
+                      ],
+                    );
+                  }
                 ) : Row(
         children:  [
              Expanded(
