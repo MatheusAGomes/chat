@@ -5,22 +5,15 @@ import 'dart:math';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:chat/Utils/constants.dart';
-import 'package:chat/Utils/toastService.dart';
-import 'package:chat/screens/EdicaoFotoScreen.dart';
+
 import 'package:chat/screens/VerificacaoImagemScreen.dart';
-import 'package:chat/screens/VerificacaoScreen.dart';
-import 'package:chat/screens/telefoneCadastroScreen.dart';
-import 'package:chat/widgets/buttonAlternativo.dart';
-import 'package:chat/widgets/buttonPadrao.dart';
-import 'package:chat/widgets/textfieldpadrao.dart';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:contacts_service/contacts_service.dart';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:audioplayers_platform_interface/src/api/player_state.dart' as playerstate;
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/src/widgets/container.dart';
 import 'package:flutter/src/widgets/framework.dart';
-import 'package:flutter_otp_text_field/flutter_otp_text_field.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path/path.dart';
 
@@ -57,6 +50,20 @@ class _ConversasScreenState extends State<ConversasScreen> {
   void initState(){
     super.initState();
     initRecorder();
+    player.onPlayerStateChanged.listen((event) {
+      if(event == playerstate.PlayerState.playing)
+        {
+          setState(() {
+            tocando = true;
+          });
+        }
+      else
+        {
+          setState(() {
+            tocando = false;
+          });
+        }
+    });
   }
   @override
   void dispose(){
@@ -391,7 +398,7 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                 ),
                                 child:  Image.network(data['text'],width: MediaQuery.of(context).size.width * 0.65,height: MediaQuery.of(context).size.height * 0.3,),
                               ) :
-                              FutureBuilder(
+                              FutureBuilder<File?>(
 future: downloadAudio(data['text']),
                                   builder: (context, snapshot) {
 
@@ -418,56 +425,37 @@ future: downloadAudio(data['text']),
                                                 width: MediaQuery.of(context).size.width * 0.25,
                                                 child: Row(
                                                   children: [
-                                                  tocando? IconButton(icon: Icon(Icons.pause,color: tocando ? Colors.green :  Colors.white,),onPressed: () async {
+                                                  tocando ? IconButton(icon: Icon(Icons.pause,color: Colors.white,),onPressed: () async {
                                                     File? teste = await  snapshot.data!;
 
-                                                    await player.pause();
-                                                    setState(() {
+                                                    await player.pause().whenComplete(() => setState(() {
                                                       tocando = false;
-                                                    });
+                                                    }));
 
-                                                  }) :  IconButton(icon: Icon(Icons.play_arrow,color: tocando ? Colors.green :  Colors.white,),onPressed: () async {
+
+                                                  }) :  IconButton(icon: Icon(Icons.play_arrow,color: Colors.white,),onPressed: () async {
 
                                                     if(tocandoAudio == false) {
-                                                                    setState(
-                                                                        () {
-                                                                      tocandoAudio =
-                                                                          true;
-                                                                    });
+
                                                                     File?
                                                                         teste =
                                                                         await snapshot
                                                                             .data!;
-                                                                    setState(
-                                                                        () {
-                                                                      tocando =
-                                                                          true;
-                                                                    });
+
                                                                     await player
                                                                         .play(DeviceFileSource(teste!
                                                                             .path))
-                                                                        .whenComplete(
-                                                                            () {
-                                                                              setState(() {
-                                                                                tocandoAudio = false;
-                                                                              });
-                                                                              setState(
-                                                                                      () {
-                                                                                    tocando =
-                                                                                    false;
-                                                                                  });
-                                                                            });
+                                                                       ;
+
+
                                                                   }
                                                             else
                                                               {
                                                                 player.resume().whenComplete(() {
+
                                                                   setState(() {
-                                                                    tocandoAudio = false;
-                                                                    setState(
-                                                                            () {
-                                                                          tocando =
-                                                                          false;
-                                                                        });
+                                                                    player.state = playerstate.PlayerState.completed;
+
                                                                   });
                                                                 });
                                                               }
