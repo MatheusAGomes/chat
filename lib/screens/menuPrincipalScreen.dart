@@ -63,6 +63,17 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
       return Usuario(telefoneUsuario: 'default');
 
     }
+    bool isLink(String text) {
+      // Expressão regular para verificar se o texto é um link
+      final RegExp regex = RegExp(
+        r"^(http:\/\/www\.|https:\/\/www\.|http:\/\/|https:\/\/)?[a-z0-9]+([\-\.]{1}[a-z0-9]+)*\.[a-z]{2,5}(:[0-9]{1,5})?(\/.*)?$",
+        caseSensitive: false,
+        multiLine: false,
+      );
+
+      // Verifica se o texto corresponde à expressão regulardata
+      return regex.hasMatch(text);
+    }
 
     String conversao(timestamp){
       DateTime dateTime = timestamp.toDate();
@@ -79,7 +90,9 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
       }
       return time;
     }
-
+    bool urlContainsMp3(String url) {
+      return url.toLowerCase().contains('mp4');
+    }
     Future<Map<String, dynamic>?> getLastMessage(String idConversation) async {
       // Obtenha a referência da coleção de mensagens
       CollectionReference messagesRef = FirebaseFirestore.instance
@@ -235,7 +248,27 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
                                                       title: Text(usuario
                                                           .nomeUsuario
                                                           .toString()),
-                                                      subtitle: Text(data['text']),
+                                                      subtitle:   urlContainsMp3(data['text']) ? Row(
+                                                        children: [
+
+                                                          data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
+
+                                                          Icon(Icons.mic_rounded,size: 20,),
+                                                          Text('Áudio')
+
+                                                        ],
+                                                      ) : (isLink(data['text']) == true ?  Row(
+                                                        children: [
+                                                          data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
+                                                          Icon(Icons.image,size: 20,),
+                                                          Text('Foto')
+                                                        ],
+                                                      ) : Row(
+                                                        children: [
+                                                          data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
+                                                          Text(data['text']),
+                                                        ],
+                                                      )),
                                                       trailing: Text(conversao(
                                                           data['timestamp'])),
                                                     ),
@@ -365,7 +398,28 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
                                                       title: Text(usuario
                                                           .nomeUsuario
                                                           .toString()),
-                                                      subtitle: Text(data['text']),
+                                                   //   subtitle: isLink(data['text']) == false ? Text(data['text']): urlContainsMp3(data['text'])  == false ?  ,
+                                                     subtitle: urlContainsMp3(data['text']) ? Row(
+                                                       children: [
+
+                                                         data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
+
+                                                         Icon(Icons.mic_rounded,size: 20,),
+                                                         Text('Áudio')
+
+                                                       ],
+                                                     ) : (isLink(data['text']) == true ?  Row(
+                                                       children: [
+                                                         data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
+                                                         Icon(Icons.image,size: 20,),
+                                                         Text('Foto')
+                                                       ],
+                                                     ) : Row(
+                                                       children: [
+                                                         data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
+                                                         Text(data['text']),
+                                                       ],
+                                                     )),
                                                       trailing: Text(conversao(
                                                           data['timestamp'])),
                                                     ),
