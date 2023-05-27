@@ -7,7 +7,7 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:chat/Utils/constants.dart';
 
 import 'package:chat/screens/VerificacaoImagemScreen.dart';
-
+import 'package:just_audio/just_audio.dart' as gabiarra;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:audioplayers_platform_interface/src/api/player_state.dart' as playerstate;
 import 'package:firebase_storage/firebase_storage.dart';
@@ -45,6 +45,8 @@ class _ConversasScreenState extends State<ConversasScreen> {
   bool tocandoAudio =false;
   bool tocando =false;
   final player = AudioPlayer();
+  Duration position = Duration.zero;
+  Duration max = Duration.zero;
 
   @override
   void initState(){
@@ -63,6 +65,27 @@ class _ConversasScreenState extends State<ConversasScreen> {
             tocando = false;
           });
         }
+
+      if(event == playerstate.PlayerState.completed)
+        {
+          setState(() {
+            position = Duration.zero;
+          });
+        }
+    });
+
+    player.onPositionChanged.listen((valor) {
+
+        setState(() {
+          position = valor;
+        });
+
+    });
+
+    player.onDurationChanged.listen((event) {
+      setState(() {
+       max = event;
+      });
     });
   }
   @override
@@ -313,6 +336,7 @@ class _ConversasScreenState extends State<ConversasScreen> {
         ),
         body: SafeArea(
           child: SingleChildScrollView(
+            physics: ClampingScrollPhysics(),
             child: Column(
               children:  [
             SizedBox(
@@ -402,7 +426,7 @@ class _ConversasScreenState extends State<ConversasScreen> {
 future: downloadAudio(data['text']),
                                   builder: (context, snapshot) {
 
-                                            Duration durartion = Duration.zero;
+
 
 
                                             return Container(
@@ -422,16 +446,13 @@ future: downloadAudio(data['text']),
                                                 ),
                                               ),
                                               child:  SizedBox(
-                                                width: MediaQuery.of(context).size.width * 0.25,
+                                                width: MediaQuery.of(context).size.width * 0.5,
                                                 child: Row(
                                                   children: [
                                                   tocando ? IconButton(icon: Icon(Icons.pause,color: Colors.white,),onPressed: () async {
                                                     File? teste = await  snapshot.data!;
 
-                                                    await player.pause().whenComplete(() => setState(() {
-                                                      tocando = false;
-                                                    }));
-
+                                                    await player.pause();
 
                                                   }) :  IconButton(icon: Icon(Icons.play_arrow,color: Colors.white,),onPressed: () async {
 
@@ -460,7 +481,17 @@ future: downloadAudio(data['text']),
                                                                 });
                                                               }
                                                                 }),
-                                                    Text(formatTime(durartion),style: TextStyle(color: Colors.white),)
+                                                  SizedBox(
+                                                    width:MediaQuery.of(context).size.width * 0.37,
+                                                    child: Slider(activeColor: Colors.white,thumbColor: Colors.white,inactiveColor: Colors.white,min: 0,max: max.inSeconds.toDouble(),value: position.inSeconds.toDouble(),
+                                                      onChanged: (value) async {
+                                                      final position = Duration(seconds: value.toInt());
+                                                      await player.seek(position);
+
+                                                      await player.resume();
+                                                    },),
+                                                  )
+                                                 //   Text(formatTime(position),style: TextStyle(color: Colors.white)),
                                                   ],
                                                 ),
                                               ),
@@ -506,7 +537,6 @@ future: downloadAudio(data['text']),
                           }
 
                         }, icon: Icon(Icons.mic_rounded),color: recording ? Colors.red: Colors.black),
-                       //todo pausar e continuar e mostrar o tempo restante
                       ],
                     );
                   }
