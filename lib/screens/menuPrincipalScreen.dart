@@ -75,6 +75,14 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
       return regex.hasMatch(text);
     }
 
+    String truncateString(String input) {
+      if (input.length > 20) {
+        return input.substring(0, 20) + '...';
+      }
+      return input;
+    }
+
+
     String conversao(timestamp){
       DateTime dateTime = timestamp.toDate();
       DateTime now = DateTime.now();
@@ -266,11 +274,11 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
                                                       ) : Row(
                                                         children: [
                                                           data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
-                                                          Text(data['text']),
+                                                          Text(truncateString(data['text'])),
                                                         ],
                                                       )),
-                                                      trailing: Text(conversao(
-                                                          data['timestamp'])),
+                                                      trailing: Text((conversao(
+                                                          data['timestamp']))),
                                                     ),
                                                   ),
                                                 );
@@ -417,7 +425,7 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
                                                      ) : Row(
                                                        children: [
                                                          data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
-                                                         Text(data['text']),
+                                                         Text(truncateString(data['text'])),
                                                        ],
                                                      )),
                                                       trailing: Text(conversao(

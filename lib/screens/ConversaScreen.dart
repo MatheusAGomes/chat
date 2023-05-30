@@ -47,23 +47,21 @@ class _ConversasScreenState extends State<ConversasScreen> {
   final player = AudioPlayer();
   Duration position = Duration.zero;
   Duration max = Duration.zero;
+  int quantidadeDeAudios = 0;
 
   @override
   void initState(){
     super.initState();
     initRecorder();
     player.onPlayerStateChanged.listen((event) {
+      print(event);
       if(event == playerstate.PlayerState.playing)
         {
-          setState(() {
             tocando = true;
-          });
         }
       else
         {
-          setState(() {
             tocando = false;
-          });
         }
 
       if(event == playerstate.PlayerState.completed)
@@ -121,21 +119,7 @@ class _ConversasScreenState extends State<ConversasScreen> {
 
 
 
-  Future<File?> downloadAudio(String url) async {
-    final response = await http.get(Uri.parse(url));
 
-    if (response.statusCode == 200) {
-      final appDocumentsDir = await getApplicationDocumentsDirectory();
-      final filePath = '${appDocumentsDir.path}/audio.mp4';
-      final file = File(filePath);
-      await file.writeAsBytes(response.bodyBytes);
-      print('Áudio baixado e salvo em: $filePath');
-      return file;
-
-    } else {
-      print('Falha ao baixar o áudio. Código de status: ${response.statusCode}');
-    }
-  }
 
 
 
@@ -204,10 +188,27 @@ class _ConversasScreenState extends State<ConversasScreen> {
     // Verifica se o texto corresponde à expressão regular
     return regex.hasMatch(text);
   }
+  Future<File?> downloadAudio(String url) async {
+    final response = await http.get(Uri.parse(url));
+
+    if (response.statusCode == 200) {
+      final appDocumentsDir = await getApplicationDocumentsDirectory();
+      final filePath = '${appDocumentsDir.path}/audio.mp4';
+      quantidadeDeAudios++;
+      final file = File(filePath);
+      await file.writeAsBytes(response.bodyBytes);
+      print('Áudio baixado e salvo em: $filePath');
+      return file;
+
+    } else {
+      print('Falha ao baixar o áudio. Código de status: ${response.statusCode}');
+    }
+  }
 
 
   @override
   Widget build(BuildContext context) {
+
     String gerarNumeroAleatorio() {
       Random random = Random();
       int numero = random.nextInt(100); // Define o limite superior como 100 (exclusivo)
@@ -422,85 +423,80 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                 ),
                                 child:  Image.network(data['text'],width: MediaQuery.of(context).size.width * 0.65,height: MediaQuery.of(context).size.height * 0.3,),
                               ) :
-                              FutureBuilder<File?>(
-future: downloadAudio(data['text']),
-                                  builder: (context, snapshot) {
+                              Container(
+                                decoration: BoxDecoration(
+                                  color: isCurrentUser
+                                      ? ColorService.azulEscuro
+                                      : Colors.grey[300],
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(20),
+                                    topRight: const Radius.circular(20),
+                                    bottomLeft: isCurrentUser
+                                        ? const Radius.circular(20)
+                                        : const Radius.circular(0),
+                                    bottomRight: isCurrentUser
+                                        ? const Radius.circular(0)
+                                        : const Radius.circular(20),
+                                  ),
+                                ),
+                                child:  SizedBox(
+                                  width: MediaQuery.of(context).size.width * 0.5,
+                                  child: Row(
+                                    children: [
+                                     tocando ? IconButton(icon: Icon(Icons.pause,color: Colors.white,),onPressed: () async {
+                                        File? teste = await  downloadAudio(data['text']);
+                                        setState(() {
+                                          tocando = false;
+                                        });
+                                        await player.pause();
+
+                                      }) :  IconButton(icon: Icon(Icons.play_arrow,color: Colors.white,),onPressed: () async {
+
+                                        if(player.state == playerstate.PlayerState.stopped || player.state == playerstate.PlayerState.completed) {
+
+                                          File?
+                                          teste =
+                                          await downloadAudio(data['text']);;
+
+                                          await player
+                                              .play(DeviceFileSource(teste!
+                                              .path))
+                                          ;
 
 
-
-
-                                            return Container(
-                                              decoration: BoxDecoration(
-                                                color: isCurrentUser
-                                                    ? ColorService.azulEscuro
-                                                    : Colors.grey[300],
-                                                borderRadius: BorderRadius.only(
-                                                  topLeft: const Radius.circular(20),
-                                                  topRight: const Radius.circular(20),
-                                                  bottomLeft: isCurrentUser
-                                                      ? const Radius.circular(20)
-                                                      : const Radius.circular(0),
-                                                  bottomRight: isCurrentUser
-                                                      ? const Radius.circular(0)
-                                                      : const Radius.circular(20),
-                                                ),
-                                              ),
-                                              child:  SizedBox(
-                                                width: MediaQuery.of(context).size.width * 0.5,
-                                                child: Row(
-                                                  children: [
-                                                  tocando ? IconButton(icon: Icon(Icons.pause,color: Colors.white,),onPressed: () async {
-                                                    File? teste = await  snapshot.data!;
-
-                                                    await player.pause();
-
-                                                  }) :  IconButton(icon: Icon(Icons.play_arrow,color: Colors.white,),onPressed: () async {
-
-                                                    if(tocandoAudio == false) {
-
-                                                                    File?
-                                                                        teste =
-                                                                        await snapshot
-                                                                            .data!;
-
-                                                                    await player
-                                                                        .play(DeviceFileSource(teste!
-                                                                            .path))
-                                                                       ;
-
-
-                                                                  }
-                                                            else
-                                                              {
-                                                                player.resume().whenComplete(() {
-
-                                                                  setState(() {
-                                                                    player.state = playerstate.PlayerState.completed;
-
-                                                                  });
-                                                                });
-                                                              }
-                                                                }),
-                                                  SizedBox(
-                                                    width:MediaQuery.of(context).size.width * 0.37,
-                                                    child: Slider(activeColor: Colors.white,thumbColor: Colors.white,inactiveColor: Colors.white,min: 0,max: max.inSeconds.toDouble(),value: position.inSeconds.toDouble(),
-                                                      onChanged: (value) async {
-                                                      final position = Duration(seconds: value.toInt());
-                                                      await player.seek(position);
-
-                                                      await player.resume();
-                                                    },),
-                                                  )
-                                                 //   Text(formatTime(position),style: TextStyle(color: Colors.white)),
-                                                  ],
-                                                ),
-                                              ),
-                                            );
-
-
-
-                                  },
-                                )
+                                        }
+                                        else
+                                        {
+                                          player.resume();
+                                        }
+                                      }),
+                                      SizedBox(
+                                        width:MediaQuery.of(context).size.width * 0.37,
+                                        child: Slider(activeColor: Colors.white,thumbColor: Colors.white,inactiveColor: Colors.white,min: 0,max: max.inSeconds.toDouble(),value: position.inSeconds.toDouble(),
+                                          onChanged: (value) async {
+                                            final position = Duration(seconds: value.toInt());
+                                            await player.seek(position);
+                                            await player.resume();
+                                          },),
+                                      )
+                                      //   Text(formatTime(position),style: TextStyle(color: Colors.white)),
+                                    ],
+                                  ),
+                                ),
+                              )
+                              // FutureBuilder<File?>(
+                              //   future: downloadAudio(data['text']),
+                              //     builder: (context, snapshot) {
+                              //
+                              //
+                              //
+                              //
+                              //               return ;
+                              //
+                              //
+                              //
+                              //     },
+                              //   )
 
                             ],
                           ),
