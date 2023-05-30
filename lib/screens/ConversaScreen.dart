@@ -7,6 +7,8 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:chat/Utils/constants.dart';
 
 import 'package:chat/screens/VerificacaoImagemScreen.dart';
+import 'package:chat/screens/VerificacaoVideoScreen.dart';
+import 'package:chat/screens/playerVideoScreen.dart';
 import 'package:just_audio/just_audio.dart' as gabiarra;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:audioplayers_platform_interface/src/api/player_state.dart' as playerstate;
@@ -22,6 +24,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:video_player/video_player.dart';
+import 'package:video_thumbnail/video_thumbnail.dart';
 
 import '../Utils/ColorsService.dart';
 import '../Utils/Routes.dart';
@@ -48,7 +52,6 @@ class _ConversasScreenState extends State<ConversasScreen> {
   Duration position = Duration.zero;
   Duration max = Duration.zero;
   int quantidadeDeAudios = 0;
-
   @override
   void initState(){
     super.initState();
@@ -112,7 +115,10 @@ class _ConversasScreenState extends State<ConversasScreen> {
   final recorder = FlutterSoundRecorder();
 
   bool urlContainsMp3(String url) {
-    return url.toLowerCase().contains('mp4');
+    return url.toLowerCase().contains('audio');
+  }
+  bool urlContainVideo(String url) {
+    return url.toLowerCase().contains('video');
   }
   final _controller = StreamController<dynamic>();
   final _messageController =  TextEditingController();
@@ -266,10 +272,39 @@ class _ConversasScreenState extends State<ConversasScreen> {
         });
       }
     }
+    _takeVideo() async {
+
+      final ImagePicker _picker = ImagePicker();
+      XFile? imageFile = await _picker.pickVideo(
+        source: ImageSource.camera,
+      );
+
+
+      if (imageFile != null) {
+        setState(() {
+          _storedImage = File(imageFile.path);
+        });
+      }
+    }
+
+    _getVideo() async {
+
+      final ImagePicker _picker = ImagePicker();
+      XFile? imageFile = await _picker.pickVideo(
+        source: ImageSource.gallery,
+
+      );
+      if (imageFile != null) {
+        setState(() {
+          _storedImage = File(imageFile.path);
+        });
+      }
+    }
+
 
     Future record() async{
       if(!isRercorderReady) return;
-      String fileName = gerarNumeroAleatorio() + '.mp4';
+      String fileName = gerarNumeroAleatorio() + 'audio.mp4';
 
       await recorder.startRecorder(toFile: fileName,);
     }
@@ -364,6 +399,8 @@ class _ConversasScreenState extends State<ConversasScreen> {
                         snapshot.data!.docs[index].data();
                         bool isCurrentUser = data['sender'] == auth.token;
 
+                        final  _controllerVideo = VideoPlayerController.network(data['text']);
+
                         return Container(
                           margin: EdgeInsets.symmetric(vertical: 10, horizontal: 15),
                           child: Row(
@@ -371,7 +408,8 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                 ? MainAxisAlignment.end
                                 : MainAxisAlignment.start,
                             children: [
-                              isLink(data['text']) == false ? Container(
+                              isLink(data['text']) == false ?
+                              Container(
                                 padding: EdgeInsets.symmetric(
                                     vertical: 10, horizontal: 15),
                                 decoration: BoxDecoration(
@@ -405,7 +443,10 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                     fontSize: 16,
                                   ),
                                 ),
-                              ) :  urlContainsMp3(data['text']) == false ?  Container(
+                              ) :
+                              urlContainsMp3(data['text']) == false ?
+                              urlContainVideo(data['text']) == false ?
+                              Container(
                                 decoration: BoxDecoration(
                                   color: isCurrentUser
                                       ? ColorService.azulEscuro
@@ -423,7 +464,43 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                 ),
                                 child:  Image.network(data['text'],width: MediaQuery.of(context).size.width * 0.65,height: MediaQuery.of(context).size.height * 0.3,),
                               ) :
+
                               Container(
+                                decoration: BoxDecoration(
+                                  color: isCurrentUser
+                                      ? ColorService.azulEscuro
+                                      : Colors.grey[300],
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: const Radius.circular(20),
+                                    topRight: const Radius.circular(20),
+                                    bottomLeft: isCurrentUser
+                                        ? const Radius.circular(20)
+                                        : const Radius.circular(0),
+                                    bottomRight: isCurrentUser
+                                        ? const Radius.circular(0)
+                                        : const Radius.circular(20),
+                                  ),
+                                ),
+                                child:  SizedBox(
+                                    width: MediaQuery.of(context).size.width * 0.65,
+                                    height: MediaQuery.of(context).size.height * 0.3,
+                                    child: Center(
+                                      child: FutureBuilder(builder:(context, snapshot) {
+                                        if(snapshot.connectionState != ConnectionState.waiting ) {
+                                          return   Stack(children: [Center(child: Image.file(File(snapshot.data!))),  Align(alignment: Alignment.center,child: IconButton(icon: Icon(Icons.play_arrow,size: 50,color: Colors.white,),onPressed: () async{
+                                            await Navigator.push(
+                                                context,MaterialPageRoute(builder: (context) => playerVideoScreen(videoEnvio: data['text'])) );
+                                          },))],);
+                                        }
+                                        else
+                                        {
+                                          return CircularProgressIndicator();
+                                        }
+                                      },future: VideoThumbnail.thumbnailFile(video: data['text']),),
+                                    )),
+                                )
+
+                               :Container(
                                 decoration: BoxDecoration(
                                   color: isCurrentUser
                                       ? ColorService.azulEscuro
@@ -443,7 +520,7 @@ class _ConversasScreenState extends State<ConversasScreen> {
                                   width: MediaQuery.of(context).size.width * 0.5,
                                   child: Row(
                                     children: [
-                                     tocando ? IconButton(icon: Icon(Icons.pause,color: Colors.white,),onPressed: () async {
+                                      tocando ? IconButton(icon: Icon(Icons.pause,color: Colors.white,),onPressed: () async {
                                         File? teste = await  downloadAudio(data['text']);
                                         setState(() {
                                           tocando = false;
@@ -596,6 +673,40 @@ class _ConversasScreenState extends State<ConversasScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text('Galeria'),
+                        Icon(Icons.image),
+                      ],
+                    ),
+                  ),
+
+                  PopupMenuItem(
+                    onTap: () async{
+                      await _takeVideo();
+                      await Navigator.push(
+                          context,MaterialPageRoute(builder: (context) => VerificacaoVideoScreen(videoEnvio: _storedImage,conversationid: widget.idConversa,)) );
+
+                    },
+                    value: 3,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Grave um vídeo'),
+                        Icon(Icons.emergency_recording),
+                      ],
+                    ),
+                  ),
+
+                  PopupMenuItem(
+                    onTap: () async{
+                      await _getVideo();
+                      await Navigator.push(
+                          context,MaterialPageRoute(builder: (context) => VerificacaoVideoScreen(videoEnvio: _storedImage,conversationid: widget.idConversa,)) );
+
+                    },
+                    value: 4,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text('Video da galeria'),
                         Icon(Icons.image),
                       ],
                     ),
