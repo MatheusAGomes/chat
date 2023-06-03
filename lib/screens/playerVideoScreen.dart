@@ -30,18 +30,33 @@ class _playerVideoScreenState extends State<playerVideoScreen> {
 
   late VideoPlayerController _controller;
 
-
-
-
+  bool _isPlaying = false;
+  Duration _videoDuration = Duration.zero;
+  Duration _videoPosition = Duration.zero;
   @override
   void initState() {
 
 
-    _controller = VideoPlayerController.network(widget.videoEnvio!)
-      ..initialize().then((_) {
-        // Ensure the first frame is shown after the video is initialized, even before the play button has been pressed.
-        setState(() {});
+    _controller = VideoPlayerController.network(widget.videoEnvio!);
+    _controller.initialize().then((_) {
+      setState(() {
+        _videoDuration = _controller.value.duration;
       });
+
+      // Adicione um ouvinte para atualizar a posição do vídeo conforme ele é reproduzido
+      _controller.addListener(() {
+        final bool isPlaying = _controller.value.isPlaying;
+
+        if (isPlaying != _isPlaying) {
+          setState(() {
+            _isPlaying = isPlaying;
+          });
+        }
+        setState(() {
+          _videoPosition = _controller.value.position;
+        });
+      });
+    });
   }
 
 
@@ -57,31 +72,19 @@ class _playerVideoScreenState extends State<playerVideoScreen> {
       final messagesRef = store.collection('conversations').doc(conversationId).collection('messages');
       await messagesRef.add(messageData);
     }
+    String videoPosition = _videoPosition != null
+        ? _videoPosition.inMinutes.toString() + ':' + (_videoPosition.inSeconds % 60).toString().padLeft(2, '0')
+        : '00:00';
+    String videoDuration = _videoDuration != null
+        ? _videoDuration.inMinutes.toString() + ':' + (_videoDuration.inSeconds % 60).toString().padLeft(2, '0')
+        : '00:00';
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        bottomOpacity: 0.0,
-        elevation: 0.0,
-        leading: Padding(
-            padding: EdgeInsets.only(
-                left: MediaQuery.of(context).size.height * 0.01,
-                bottom: MediaQuery.of(context).size.height * 0.01),
-            child: IconButton(
-              onPressed: () {
-                Navigator.pop(context, null);
-              },
-              icon: const Icon(Icons.close),
-              color: Colors.white,
-            )),
-      ),
       backgroundColor: Colors.black,
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            SizedBox(
-                width: MediaQuery.of(context).size.width * 0.8,
-                height: MediaQuery.of(context).size.height *0.5,
+      body:
+          Stack(
+            children: [SizedBox(
+                width: MediaQuery.of(context).size.width ,
+                height: MediaQuery.of(context).size.height,
 
                 child: InkWell(onTap: (){
                   setState(() {
@@ -89,13 +92,45 @@ class _playerVideoScreenState extends State<playerVideoScreen> {
                         ? _controller.pause()
                         : _controller.play();
                   });
-                },child: VideoPlayer(_controller)))
-          ]),
-          SizedBox(
-              width: MediaQuery.of(context).size.width * 0.8,
-              child: VideoProgressIndicator(_controller, allowScrubbing: true,colors: VideoProgressColors(backgroundColor: Colors.white,playedColor: ColorService.azulEscuro),))
-        ],
-      ),
+                },child: VideoPlayer(_controller))),
+
+              Positioned(top: 700,left:20,child: Text("${videoPosition}",style: TextStyle(color: Colors.white),)),
+              Positioned(top: 700,left:340,child: Text("${videoDuration}",style: TextStyle(color: Colors.white),)),
+
+              Positioned(
+                top: 20,
+                child: IconButton(
+                  onPressed: () {
+                    Navigator.pop(context, null);
+                  },
+                  icon: const Icon(Icons.close),
+                  color: Colors.white,
+                ),
+              ),
+              Positioned(
+        left: 40,
+                top: 650,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    CircleAvatar(radius: 25,child: IconButton(onPressed: (){
+                      setState(() {
+                        _controller.value.isPlaying
+                            ? _controller.pause()
+                            : _controller.play();
+                      });
+                    }, icon: _isPlaying ? Icon(Icons.pause,size: 30,) :Icon(Icons.play_arrow,size: 30,))),
+                    SizedBox(height: MediaQuery.of(context).size.height * 0.03,),
+                    SizedBox(
+                        width: MediaQuery.of(context).size.width * 0.8,
+                        child: VideoProgressIndicator(_controller, allowScrubbing: true,colors: VideoProgressColors(backgroundColor: Colors.white,playedColor: ColorService.azulEscuro),)),
+                  ],
+                ),
+              )
+            ],
+          ),
+
     );
   }
 }
