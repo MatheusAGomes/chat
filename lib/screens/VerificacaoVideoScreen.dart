@@ -85,6 +85,11 @@ class _VerificacaoVideoScreenState extends State<VerificacaoVideoScreen> {
 
 
 
+  @override
+  void dispose() {
+    _controller.dispose(); // Certifique-se de liberar o controlador ao sair da tela
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {

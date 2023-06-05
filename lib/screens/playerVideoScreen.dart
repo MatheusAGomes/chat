@@ -58,6 +58,11 @@ class _playerVideoScreenState extends State<playerVideoScreen> {
       });
     });
   }
+  @override
+  void dispose() {
+    _controller.dispose(); // Certifique-se de liberar o controlador ao sair da tela
+    super.dispose();
+  }
 
 
 
