@@ -98,8 +98,11 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
       }
       return time;
     }
-    bool urlContainsMp3(String url) {
-      return url.toLowerCase().contains('mp4');
+    bool urlContainsMp4Audio(String url) {
+      return url.toLowerCase().contains('audio.mp4');
+    }
+    bool urlContainsMp4Video(String url) {
+      return url.toLowerCase().contains('mp4video');
     }
     Future<Map<String, dynamic>?> getLastMessage(String idConversation) async {
       // Obtenha a referência da coleção de mensagens
@@ -256,7 +259,7 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
                                                       title: Text(usuario
                                                           .nomeUsuario
                                                           .toString()),
-                                                      subtitle:   urlContainsMp3(data['text']) ? Row(
+                                                      subtitle:   urlContainsMp4Audio(data['text']) ? Row(
                                                         children: [
 
                                                           data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
@@ -265,7 +268,18 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
                                                           Text('Áudio')
 
                                                         ],
-                                                      ) : (isLink(data['text']) == true ?  Row(
+                                                      ) :
+                                                      urlContainsMp4Video(data['text']) ? Row(
+                                                        children: [
+
+                                                          data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
+
+                                                          Icon(Icons.play_arrow,size: 20,),
+                                                          Text('Video')
+
+                                                        ],
+                                                      ):
+                                                      (isLink(data['text']) == true ?  Row(
                                                         children: [
                                                           data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
                                                           Icon(Icons.image,size: 20,),
@@ -407,7 +421,7 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
                                                           .nomeUsuario
                                                           .toString()),
                                                    //   subtitle: isLink(data['text']) == false ? Text(data['text']): urlContainsMp3(data['text'])  == false ?  ,
-                                                     subtitle: urlContainsMp3(data['text']) ? Row(
+                                                     subtitle: urlContainsMp4Audio(data['text']) ? Row(
                                                        children: [
 
                                                          data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
@@ -416,7 +430,20 @@ class _MenuPrincipalScreenState extends State<MenuPrincipalScreen> {
                                                          Text('Áudio')
 
                                                        ],
-                                                     ) : (isLink(data['text']) == true ?  Row(
+                                                     ) :
+                                                     urlContainsMp4Video(data['text']) ? Row(
+                                                       children: [
+
+                                                         data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
+
+                                                         Icon(Icons.play_arrow,size: 20,),
+                                                         Text('Video')
+
+                                                       ],
+                                                     ):
+
+
+                                                     (isLink(data['text']) == true ?  Row(
                                                        children: [
                                                          data['sender'] == auth.token ? Text('Enviado: ') : Text('Recebido: '),
                                                          Icon(Icons.image,size: 20,),
